@@ -10,6 +10,12 @@ package it's built on.
 - School news and academic reports
 - Several children and schools, each kept separate
 
+| | | | |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/images/updates.png" width="200" alt="Updates: new results and feedback"> | <img src="docs/images/feedback.png" width="200" alt="Assessment feedback with marked work"> | <img src="docs/images/timetable.png" width="200" alt="Week timetable"> | <img src="docs/images/widget.png" width="200" alt="Next-lesson Home Screen widget"> |
+
+Screenshots use the app's fictional demo.
+
 It never submits work or sends messages, and has no server of its own: it talks only to your school. See
 [privacy](docs/PRIVACY.md). Need help? See [support](SUPPORT.md).
 
