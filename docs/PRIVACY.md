@@ -12,4 +12,4 @@ Debug simulator builds additionally save an owner-only local authentication file
 
 This document describes the app implementation; school and identity-provider privacy policies apply to their services.
 
-Questions about privacy: open an issue at https://github.com/geoffwatts/schoolkid-engage/issues.
+Questions about privacy: see [support](https://github.com/geoffwatts/schoolkid-engage/blob/main/SUPPORT.md). Issues are public, so please don't include personal or school details.

@@ -11,7 +11,7 @@ package it's built on.
 - Several children and schools, each kept separate
 
 It never submits work or sends messages, and has no server of its own: it talks only to your school. See
-[privacy](docs/PRIVACY.md).
+[privacy](docs/PRIVACY.md). Need help? See [support](SUPPORT.md).
 
 ## Run it
 
