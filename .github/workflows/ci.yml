@@ -1,0 +1,14 @@
+name: Swift and iOS
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Swift library
+        run: swift test
+      - name: Build iOS app
+        run: >-
+          xcodebuild -project SEQTADisengage.xcodeproj -scheme SEQTADisengage
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build

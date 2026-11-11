@@ -1,0 +1,25 @@
+{
+  "fill" : {
+    "solid" : "srgb:0.08627,0.07451,0.42745,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [ { "image-name" : "04-grade.png", "name" : "grade" } ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.4 },
+      "translucency" : { "enabled" : false, "value" : 0.5 }
+    },
+    {
+      "layers" : [ { "image-name" : "03-bubble.png", "name" : "bubble" } ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    },
+    {
+      "layers" : [ { "image-name" : "02-book.png", "name" : "book" } ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : true, "value" : 0.2 }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

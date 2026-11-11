@@ -1,0 +1,726 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = F76451FC7B1501854AC8D81A /* SEQTAKit */; };
+		2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */; };
+		31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */; };
+		3BFAA7E18681F74ACED7E697 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 440CD885941208359C8CAE54 /* Assets.xcassets */; };
+		48A48904EA038E84BCBC0CE0 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3371241192234F3AE31781A9 /* WidgetKit.framework */; };
+		4923C886E91806126B0F5ECD /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1AC403E1782F7FCFA656C7C8 /* SEQTAKit */; };
+		53439F35F6EFC8B431CA6826 /* AssessmentIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBF6AF4F91E72C660015C20 /* AssessmentIcons.swift */; };
+		60EF6CA4646FD8C0A31AD792 /* TimetableScrollCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */; };
+		621C519A4E86E62A33C4FE77 /* TimetableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDE8C0B7B3D62038238699B /* TimetableView.swift */; };
+		64B4F22492B5D9D40BC2B9AD /* Demo.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBD124747A4D0180F0449FFF /* Demo.swift */; };
+		6B887EBBE272DB7EB8731EDB /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = C962649151E2A8F784D2EF7B /* AppIcon.icon */; };
+		6CEEA77A9609C3423791CB78 /* SchoolkidWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		6DF85DA3A248AB6618532626 /* DebugDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */; };
+		71CC9CAA162F74499BD728FE /* NetworkActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */; };
+		7FABDE0655D7D9E20E4DD07C /* AssessmentContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6592B693485BD64B81F92417 /* AssessmentContent.swift */; };
+		8ABF7394DDDBA55BE2B4F0DC /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D47401B0A8448225E6EF8B5 /* AccountsView.swift */; };
+		94F9B4F5E715028EED475A44 /* AttachmentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36303393E648FE9F02F49702 /* AttachmentCard.swift */; };
+		9A9753B8F6F7FA92875F9B2C /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89589FA7645D9306AF4E8972 /* AppModel.swift */; };
+		A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */; };
+		B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */; };
+		B92C1F7725E7575F640D8CEF /* UpdateNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */; };
+		BDA8741965720E279448B954 /* AssessmentPrinting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */; };
+		C9CF98498E193C31D482435F /* TimetableWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AFBE1D23380793415B6F82 /* TimetableWeekView.swift */; };
+		D8DFDF919E3F939B1F503D8E /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */; };
+		E1F31FF324747F21AE6A8E20 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDDE75BFB70C2036EDC5B1E /* ActivityView.swift */; };
+		E3D1B7384A99EBEDB559BC56 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */; };
+		E60D3E26B25469BFF78C9E0B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 19449BB5A26A827D000F8CDA /* SwiftUI.framework */; };
+		E79972E1D584676D496FBF9C /* SchoolDayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */; };
+		EAD8C9F959B7E3D2F4D5E999 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */; };
+		ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */; };
+		EE928B077002DDB562CFE5DE /* ReaderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042AEB883B6F144075B41BFD /* ReaderUITests.swift */; };
+		F1D6FE4027228931F69546EE /* ReadingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C9C99F314FBA47B27BF34561 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BD59F83B12F9524082FDEDC4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 01BF5E2F4C45E0B167290007;
+			remoteInfo = SchoolkidWidgets;
+		};
+		CCE8C6A66B9865F6C846BB09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BD59F83B12F9524082FDEDC4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F42A54ACC1AE78F1030F0A6;
+			remoteInfo = SEQTADisengage;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		09839B31142C2BCE92DF8A4B /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				6CEEA77A9609C3423791CB78 /* SchoolkidWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		042AEB883B6F144075B41BFD /* ReaderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderUITests.swift; sourceTree = "<group>"; };
+		05AFBE1D23380793415B6F82 /* TimetableWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableWeekView.swift; sourceTree = "<group>"; };
+		1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateNotifications.swift; sourceTree = "<group>"; };
+		19449BB5A26A827D000F8CDA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingViews.swift; sourceTree = "<group>"; };
+		3371241192234F3AE31781A9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		36303393E648FE9F02F49702 /* AttachmentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCard.swift; sourceTree = "<group>"; };
+		3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentRotation.swift; sourceTree = "<group>"; };
+		440CD885941208359C8CAE54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDividers.swift; sourceTree = "<group>"; };
+		5CDE8C0B7B3D62038238699B /* TimetableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableView.swift; sourceTree = "<group>"; };
+		6592B693485BD64B81F92417 /* AssessmentContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentContent.swift; sourceTree = "<group>"; };
+		68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SchoolkidWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		89589FA7645D9306AF4E8972 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		9D47401B0A8448225E6EF8B5 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
+		9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolDayWidget.swift; sourceTree = "<group>"; };
+		AAE7183E82F345A3FC0AF6CC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableScrollCapture.swift; sourceTree = "<group>"; };
+		B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentPrinting.swift; sourceTree = "<group>"; };
+		B50F160427D1D042DF7BAA68 /* SEQTADisengage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SEQTADisengage.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BBD124747A4D0180F0449FFF /* Demo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demo.swift; sourceTree = "<group>"; };
+		BBDDE75BFB70C2036EDC5B1E /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		C4831C2FC55532C42EC9E03E /* ReaderUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ReaderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolSignInView.swift; sourceTree = "<group>"; };
+		C962649151E2A8F784D2EF7B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkActivity.swift; sourceTree = "<group>"; };
+		CEBF6AF4F91E72C660015C20 /* AssessmentIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentIcons.swift; sourceTree = "<group>"; };
+		CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SEQTADisengageApp.swift; sourceTree = "<group>"; };
+		D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficeDocumentPreview.swift; sourceTree = "<group>"; };
+		D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDiagnostics.swift; sourceTree = "<group>"; };
+		EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		FF72AC72CC285027484DF72B /* seqta-disengage */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "seqta-disengage"; path = .; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		53E317A76B4BF84E6BBB70BD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */,
+				48A48904EA038E84BCBC0CE0 /* WidgetKit.framework in Frameworks */,
+				E60D3E26B25469BFF78C9E0B /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CD760B9451F1BEF3FBC57E32 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4923C886E91806126B0F5ECD /* SEQTAKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		03DDD9D52E820E83A8AC575D /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				FF72AC72CC285027484DF72B /* seqta-disengage */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		4E00567C3EAD97C2E9F9C28B = {
+			isa = PBXGroup;
+			children = (
+				74631789C17C419F4E469548 /* App */,
+				8AFDBC84DA6F10B31824DA05 /* AppUITests */,
+				03DDD9D52E820E83A8AC575D /* Packages */,
+				6064359EE493EBE3944CDF0A /* Shared */,
+				CD56BD8DBE8F53BB767D429E /* Widgets */,
+				B65AC38CF787F71288BEF6FB /* Frameworks */,
+				A431433010CD7814FA31A4A9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6064359EE493EBE3944CDF0A /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		74631789C17C419F4E469548 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9D47401B0A8448225E6EF8B5 /* AccountsView.swift */,
+				BBDDE75BFB70C2036EDC5B1E /* ActivityView.swift */,
+				C962649151E2A8F784D2EF7B /* AppIcon.icon */,
+				89589FA7645D9306AF4E8972 /* AppModel.swift */,
+				6592B693485BD64B81F92417 /* AssessmentContent.swift */,
+				CEBF6AF4F91E72C660015C20 /* AssessmentIcons.swift */,
+				B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */,
+				440CD885941208359C8CAE54 /* Assets.xcassets */,
+				36303393E648FE9F02F49702 /* AttachmentCard.swift */,
+				3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */,
+				D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */,
+				BBD124747A4D0180F0449FFF /* Demo.swift */,
+				CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */,
+				D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */,
+				6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */,
+				540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */,
+				1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */,
+				C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */,
+				CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */,
+				ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */,
+				5CDE8C0B7B3D62038238699B /* TimetableView.swift */,
+				05AFBE1D23380793415B6F82 /* TimetableWeekView.swift */,
+				1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		8AFDBC84DA6F10B31824DA05 /* AppUITests */ = {
+			isa = PBXGroup;
+			children = (
+				042AEB883B6F144075B41BFD /* ReaderUITests.swift */,
+			);
+			path = AppUITests;
+			sourceTree = "<group>";
+		};
+		A431433010CD7814FA31A4A9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C4831C2FC55532C42EC9E03E /* ReaderUITests.xctest */,
+				68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */,
+				B50F160427D1D042DF7BAA68 /* SEQTADisengage.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B65AC38CF787F71288BEF6FB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				19449BB5A26A827D000F8CDA /* SwiftUI.framework */,
+				3371241192234F3AE31781A9 /* WidgetKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CD56BD8DBE8F53BB767D429E /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				AAE7183E82F345A3FC0AF6CC /* Info.plist */,
+				9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		01BF5E2F4C45E0B167290007 /* SchoolkidWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A3E27B3D247BE28B10165DF /* Build configuration list for PBXNativeTarget "SchoolkidWidgets" */;
+			buildPhases = (
+				4E24E5CA81784F288A564A80 /* Sources */,
+				53E317A76B4BF84E6BBB70BD /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SchoolkidWidgets;
+			packageProductDependencies = (
+				F76451FC7B1501854AC8D81A /* SEQTAKit */,
+			);
+			productName = SchoolkidWidgets;
+			productReference = 68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		0A1069B06B2182314425965C /* ReaderUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01AE4A331DE3555D9AD27723 /* Build configuration list for PBXNativeTarget "ReaderUITests" */;
+			buildPhases = (
+				17844122B31877B726A5D16C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				351C58A59E9B9A62C01E58EB /* PBXTargetDependency */,
+			);
+			name = ReaderUITests;
+			packageProductDependencies = (
+			);
+			productName = ReaderUITests;
+			productReference = C4831C2FC55532C42EC9E03E /* ReaderUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		8F42A54ACC1AE78F1030F0A6 /* SEQTADisengage */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39BDB6E9A3DB2AE6923B9739 /* Build configuration list for PBXNativeTarget "SEQTADisengage" */;
+			buildPhases = (
+				2D8ED240297DC40A319B66B6 /* Sources */,
+				6305FA6E2B5BDD9EA3B1F781 /* Resources */,
+				CD760B9451F1BEF3FBC57E32 /* Frameworks */,
+				09839B31142C2BCE92DF8A4B /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FA644F3AE7169CAA03DAEA28 /* PBXTargetDependency */,
+			);
+			name = SEQTADisengage;
+			packageProductDependencies = (
+				1AC403E1782F7FCFA656C7C8 /* SEQTAKit */,
+			);
+			productName = SEQTADisengage;
+			productReference = B50F160427D1D042DF7BAA68 /* SEQTADisengage.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BD59F83B12F9524082FDEDC4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					01BF5E2F4C45E0B167290007 = {
+						DevelopmentTeam = CYQ6X8DT95;
+						ProvisioningStyle = Automatic;
+					};
+					0A1069B06B2182314425965C = {
+						TestTargetID = 8F42A54ACC1AE78F1030F0A6;
+					};
+					8F42A54ACC1AE78F1030F0A6 = {
+						DevelopmentTeam = CYQ6X8DT95;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = C08BDE60FA37956CB9B5949E /* Build configuration list for PBXProject "SEQTADisengage" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4E00567C3EAD97C2E9F9C28B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4FAC0CA8AEA54B3912DCB70A /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A431433010CD7814FA31A4A9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8F42A54ACC1AE78F1030F0A6 /* SEQTADisengage */,
+				01BF5E2F4C45E0B167290007 /* SchoolkidWidgets */,
+				0A1069B06B2182314425965C /* ReaderUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6305FA6E2B5BDD9EA3B1F781 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6B887EBBE272DB7EB8731EDB /* AppIcon.icon in Resources */,
+				3BFAA7E18681F74ACED7E697 /* Assets.xcassets in Resources */,
+				EAD8C9F959B7E3D2F4D5E999 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		17844122B31877B726A5D16C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE928B077002DDB562CFE5DE /* ReaderUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D8ED240297DC40A319B66B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8ABF7394DDDBA55BE2B4F0DC /* AccountsView.swift in Sources */,
+				E1F31FF324747F21AE6A8E20 /* ActivityView.swift in Sources */,
+				9A9753B8F6F7FA92875F9B2C /* AppModel.swift in Sources */,
+				7FABDE0655D7D9E20E4DD07C /* AssessmentContent.swift in Sources */,
+				53439F35F6EFC8B431CA6826 /* AssessmentIcons.swift in Sources */,
+				BDA8741965720E279448B954 /* AssessmentPrinting.swift in Sources */,
+				94F9B4F5E715028EED475A44 /* AttachmentCard.swift in Sources */,
+				2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */,
+				6DF85DA3A248AB6618532626 /* DebugDiagnostics.swift in Sources */,
+				64B4F22492B5D9D40BC2B9AD /* Demo.swift in Sources */,
+				71CC9CAA162F74499BD728FE /* NetworkActivity.swift in Sources */,
+				ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */,
+				A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */,
+				F1D6FE4027228931F69546EE /* ReadingViews.swift in Sources */,
+				31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */,
+				B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */,
+				60EF6CA4646FD8C0A31AD792 /* TimetableScrollCapture.swift in Sources */,
+				621C519A4E86E62A33C4FE77 /* TimetableView.swift in Sources */,
+				C9CF98498E193C31D482435F /* TimetableWeekView.swift in Sources */,
+				B92C1F7725E7575F640D8CEF /* UpdateNotifications.swift in Sources */,
+				E3D1B7384A99EBEDB559BC56 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E24E5CA81784F288A564A80 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E79972E1D584676D496FBF9C /* SchoolDayWidget.swift in Sources */,
+				D8DFDF919E3F939B1F503D8E /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		351C58A59E9B9A62C01E58EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F42A54ACC1AE78F1030F0A6 /* SEQTADisengage */;
+			targetProxy = CCE8C6A66B9865F6C846BB09 /* PBXContainerItemProxy */;
+		};
+		FA644F3AE7169CAA03DAEA28 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 01BF5E2F4C45E0B167290007 /* SchoolkidWidgets */;
+			targetProxy = C9C99F314FBA47B27BF34561 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		034CF143E00E4C7F91A6FF41 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/SchoolkidWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = CYQ6X8DT95;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Schoolkid Engage";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.engage.widgets;
+				PRODUCT_NAME = SchoolkidWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		83366AFF3B0D36B7E4B576FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.ReaderUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SEQTADisengage;
+			};
+			name = Release;
+		};
+		833F5F53E47C740E4006DCD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.ReaderUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SEQTADisengage;
+			};
+			name = Debug;
+		};
+		950124787C81912939E538C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A2A6BC7AD812EDD41E53B042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/SEQTADisengage.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = CYQ6X8DT95;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Schoolkid Engage";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.engage;
+				PRODUCT_NAME = SEQTADisengage;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B3A770DF00F122A89D165609 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C7238CD8FCAC110A48EB0AC9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Config/SchoolkidWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = CYQ6X8DT95;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Schoolkid Engage";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.engage.widgets;
+				PRODUCT_NAME = SchoolkidWidgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EB59F71B21F835F81AF27ED5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Config/SEQTADisengage.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 9;
+				DEVELOPMENT_TEAM = CYQ6X8DT95;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Schoolkid Engage";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = au.schoolkid.engage;
+				PRODUCT_NAME = SEQTADisengage;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		01AE4A331DE3555D9AD27723 /* Build configuration list for PBXNativeTarget "ReaderUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				833F5F53E47C740E4006DCD7 /* Debug */,
+				83366AFF3B0D36B7E4B576FC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		0A3E27B3D247BE28B10165DF /* Build configuration list for PBXNativeTarget "SchoolkidWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7238CD8FCAC110A48EB0AC9 /* Debug */,
+				034CF143E00E4C7F91A6FF41 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		39BDB6E9A3DB2AE6923B9739 /* Build configuration list for PBXNativeTarget "SEQTADisengage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EB59F71B21F835F81AF27ED5 /* Debug */,
+				A2A6BC7AD812EDD41E53B042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C08BDE60FA37956CB9B5949E /* Build configuration list for PBXProject "SEQTADisengage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				950124787C81912939E538C6 /* Debug */,
+				B3A770DF00F122A89D165609 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		4FAC0CA8AEA54B3912DCB70A /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1AC403E1782F7FCFA656C7C8 /* SEQTAKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SEQTAKit;
+		};
+		F76451FC7B1501854AC8D81A /* SEQTAKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SEQTAKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = BD59F83B12F9524082FDEDC4 /* Project object */;
+}
