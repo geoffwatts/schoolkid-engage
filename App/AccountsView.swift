@@ -11,44 +11,66 @@ struct AccountsView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Saved school accounts") {
+                Section {
                     ForEach(model.accounts) { account in
                         Button {
                             model.selectAccount(account.id); dismiss()
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(account.name).foregroundStyle(.primary)
-                                    Text(account.school.url.host ?? "").font(.caption).foregroundStyle(.secondary)
-                                    Text(account.username).font(.caption).foregroundStyle(.secondary)
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(account.name).font(.body.weight(.medium)).foregroundStyle(.primary)
+                                    Text([account.username, account.school.url.host ?? ""].filter { !$0.isEmpty }.joined(separator: " · "))
+                                        .font(.subheadline).foregroundStyle(.secondary)
                                 }
-                                Spacer()
-                                if model.accountID == account.id { Image(systemName: "checkmark").foregroundStyle(.teal) }
+                                Spacer(minLength: 0)
+                                if model.accountID == account.id {
+                                    Image(systemName: "checkmark").font(.body.weight(.semibold)).foregroundStyle(.teal)
+                                        .accessibilityLabel("Current account")
+                                }
                             }
                         }.swipeActions { Button("Remove", role: .destructive) { removing = account } }
                     }
-                    Button { showSignIn = true } label: { Label("Add or reconnect an account", systemImage: "plus.circle") }
+                    Button { showSignIn = true } label: { Label("Add or reconnect an account", systemImage: "plus.circle.fill") }
+                } header: { Text("School accounts") } footer: {
+                    if !model.accounts.isEmpty { Text("Swipe an account to remove it. Sessions are kept in this device’s Keychain; removing an account deletes its saved session.") }
                 }
-                if let error = model.error { Section { Text(error).foregroundStyle(.red) } }
+                if let error = model.error {
+                    Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
+                }
                 if !model.accounts.isEmpty {
                     Section {
-                        Toggle("Notify me about assessments", isOn: $notifier.isEnabled)
+                        Toggle(isOn: $notifier.isEnabled) {
+                            Label("Assessment updates", systemImage: "bell.badge.fill")
+                        }
+                        if notifier.isEnabled && notifier.authorization == .denied {
+                            Button {
+                                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
+                            } label: {
+                                Label("Notifications are off for this app. Turn them on in Settings", systemImage: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                            }
+                        }
                         #if DEBUG
                         Button("Test: announce the newest assessment update") { Task { await notifier.debugAnnounceNewest() } }
                         #endif
-                        if notifier.isEnabled && notifier.authorization == .denied {
-                            Button("Allow notifications in Settings") {
-                                if let url = URL(string: UIApplication.openNotificationSettingsURLString) { openURL(url) }
-                            }
-                        }
-                    } footer: { Text("Alerts for new assessment results and feedback. iOS checks your school’s updates in the background from time to time while your device is unlocked; anything already shown in the app isn’t announced.") }
+                    } header: { Text("Notifications") } footer: {
+                        Text("Get an alert when results or feedback are released. iOS checks in the background from time to time while your device is unlocked; anything you’ve already seen in the app isn’t announced.")
+                    }
                 }
                 Section {
-                    if model.isDemo { Button("Leave demo") { model.endDemo(); dismiss() } }
-                    else { Button("Explore demo") { model.startDemo(); dismiss() } }
-                } footer: { Text("Sessions are stored in this device’s Keychain. Removing an account deletes its saved session from this app. Swipe an account to remove it.") }
-                Section { Text("Independent and read-only. No messaging, submissions or edits.").foregroundStyle(.secondary) }
-            }.listStyle(.plain).navigationTitle("Accounts")
+                    if model.isDemo {
+                        Button { model.endDemo(); dismiss() } label: { Label("Leave demo", systemImage: "xmark.circle") }
+                    } else {
+                        Button { model.startDemo(); dismiss() } label: { Label("Explore demo", systemImage: "sparkles") }
+                    }
+                } header: { Text("Demo") } footer: {
+                    if !model.isDemo { Text("Try the app with sample data. Your accounts aren’t affected.") }
+                }
+                Section {} footer: {
+                    Text("Independent and read-only. No messaging, submissions or edits.")
+                        .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 8)
+                }
+            }.listStyle(.insetGrouped).navigationTitle("Accounts")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
                 .sheet(isPresented: $showSignIn, onDismiss: { if model.accountID != nil { dismiss() } }) { SignInView() }
                 .confirmationDialog("Remove this saved account?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
