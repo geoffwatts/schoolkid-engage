@@ -46,16 +46,23 @@ struct SchoolDayProvider: TimelineProvider {
 struct SchoolDayView: View {
     let entry: SchoolDayEntry
     @Environment(\.widgetFamily) private var family
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// Room for three lessons and the child's name; larger text sizes show fewer, bigger rows instead.
+    private var roomy: Bool { typeSize < .xLarge }
     private var snapshot: WidgetSnapshot? { entry.snapshot.flatMap { $0.isStale(at: entry.date) ? nil : $0 } }
     var body: some View {
         if let snapshot {
-            switch family {
-            case .accessoryInline: inline(snapshot)
-            case .accessoryCircular: circular(snapshot)
-            case .accessoryRectangular: rectangular(snapshot)
-            case .systemMedium: medium(snapshot)
-            default: small(snapshot)
+            Group {
+                switch family {
+                case .accessoryInline: inline(snapshot)
+                case .accessoryCircular: circular(snapshot)
+                case .accessoryRectangular: rectangular(snapshot)
+                case .systemMedium: medium(snapshot)
+                default: small(snapshot)
+                }
             }
+            // A widget's space is fixed, so text grows up to the largest standard size, not the accessibility sizes.
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         } else {
             // Nothing to show until the app has loaded a timetable (or it hasn't been opened in a couple of weeks).
             Text(family == .accessoryInline ? "Open Schoolkid Engage" : "Open Schoolkid Engage to load the timetable.")
@@ -66,13 +73,20 @@ struct SchoolDayView: View {
     // MARK: Pieces
 
     /// "Day 3" plus the week glyph, or nothing on days without a cycle (weekends, holidays).
-    @ViewBuilder private func cycle(_ snapshot: WidgetSnapshot, font: Font) -> some View {
-        if let parts = snapshot.cycleParts(on: entry.date) {
+    @ViewBuilder private func cycle(_ snapshot: WidgetSnapshot, on day: Date, font: Font) -> some View {
+        if let parts = snapshot.cycleParts(on: day) {
             HStack(spacing: 4) {
-                Text("Day \(parts.day)").font(font).monospacedDigit()
+                Text("Day \(parts.day)").font(font).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
                 if let week = parts.week { WeekLetterGlyph(letter: week).font(font) }
             }
         }
+    }
+    /// The day the widget is describing: today while there's a lesson on or still to come today, otherwise the day of
+    /// the next lesson (so after school it reads "Day 4, Thursday" alongside Thursday's lessons, not today's).
+    private func shownDay(_ snapshot: WidgetSnapshot) -> Date {
+        guard snapshot.current(at: entry.date) == nil, let next = snapshot.upcoming(after: entry.date, limit: 1).first,
+              !Calendar.current.isDate(next.start, inSameDayAs: entry.date) else { return entry.date }
+        return next.start
     }
     private func time(_ date: Date) -> String { date.formatted(date: .omitted, time: .shortened) }
     /// "Now" for a lesson in progress, "Next" later today, otherwise the day ("Tomorrow", "Monday").
@@ -90,7 +104,7 @@ struct SchoolDayView: View {
 
     private func small(_ snapshot: WidgetSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            cycle(snapshot, font: .headline)
+            cycle(snapshot, on: shownDay(snapshot), font: .headline)
             Spacer(minLength: 0)
             if let lesson = focus(snapshot) {
                 Text(caption(for: lesson).uppercased()).font(.caption2.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
@@ -105,25 +119,31 @@ struct SchoolDayView: View {
 
     private func medium(_ snapshot: WidgetSnapshot) -> some View {
         let now = snapshot.current(at: entry.date)
-        let next = snapshot.upcoming(after: entry.date, limit: now == nil ? 3 : 2)
-        return HStack(alignment: .top, spacing: 14) {
+        let rows = roomy ? 3 : 2
+        let next = snapshot.upcoming(after: entry.date, limit: now == nil ? rows : rows - 1)
+        let day = shownDay(snapshot)
+        return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                cycle(snapshot, font: .title3.weight(.semibold))
-                Text(entry.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
+                cycle(snapshot, on: day, font: .title3.weight(.semibold))
+                Text(day.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(2).minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
-                Text(snapshot.childName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                if roomy { Text(snapshot.childName).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
             }.frame(width: 100, alignment: .leading)
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: roomy ? 7 : 5) {
                 ForEach(Array(([now].compactMap { $0 } + next).enumerated()), id: \.offset) { _, lesson in
                     let isNow = lesson.start <= entry.date
+                    // The left column already names the day; only say it again for a lesson on a different one.
+                    let otherDay = Calendar.current.isDate(lesson.start, inSameDayAs: day) ? nil : caption(for: lesson)
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        // Times never wrap: they take the width they need and the subject gives way.
                         Text(isNow ? "Now" : time(lesson.start)).font(.caption.weight(.semibold)).monospacedDigit()
                             .foregroundStyle(isNow ? Color.teal : .primary)
-                            .frame(width: 46, alignment: .leading)
+                            .lineLimit(1).fixedSize().frame(minWidth: 46, alignment: .leading)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(lesson.subject).font(.subheadline.weight(.semibold)).lineLimit(1)
-                            Text([caption(for: lesson) == "Now" || caption(for: lesson) == "Next" ? nil : caption(for: lesson), lesson.room.isEmpty ? nil : lesson.room]
-                                .compactMap { $0 }.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                            Text([otherDay, lesson.room.isEmpty ? nil : lesson.room].compactMap { $0 }.joined(separator: " · "))
+                                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                         }
                         Spacer(minLength: 0)
                     }
@@ -138,7 +158,7 @@ struct SchoolDayView: View {
 
     private func rectangular(_ snapshot: WidgetSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            cycle(snapshot, font: .headline)
+            cycle(snapshot, on: shownDay(snapshot), font: .headline)
             if let lesson = focus(snapshot) {
                 Text("\(caption(for: lesson)) \(lesson.subject)").font(.subheadline).lineLimit(1)
                 Text([lesson.start <= entry.date ? "until \(time(lesson.end))" : time(lesson.start), lesson.room].filter { !$0.isEmpty }.joined(separator: " · "))
