@@ -46,9 +46,6 @@ struct SchoolDayProvider: TimelineProvider {
 struct SchoolDayView: View {
     let entry: SchoolDayEntry
     @Environment(\.widgetFamily) private var family
-    @Environment(\.dynamicTypeSize) private var typeSize
-    /// Room for three lessons and the child's name; larger text sizes show fewer, bigger rows instead.
-    private var roomy: Bool { typeSize < .xLarge }
     private var snapshot: WidgetSnapshot? { entry.snapshot.flatMap { $0.isStale(at: entry.date) ? nil : $0 } }
     var body: some View {
         if let snapshot {
@@ -118,42 +115,60 @@ struct SchoolDayView: View {
     }
 
     private func medium(_ snapshot: WidgetSnapshot) -> some View {
-        let now = snapshot.current(at: entry.date)
-        let rows = roomy ? 3 : 2
-        let next = snapshot.upcoming(after: entry.date, limit: now == nil ? rows : rows - 1)
         let day = shownDay(snapshot)
         return HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                cycle(snapshot, on: day, font: .title3.weight(.semibold))
-                Text(day.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
-                    .lineLimit(2).minimumScaleFactor(0.8)
-                Spacer(minLength: 0)
-                if roomy { Text(snapshot.childName).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
+            // The child's name is the first thing to go when the text is too big for it.
+            ViewThatFits(in: .vertical) {
+                dayColumn(snapshot, day: day, showsName: true)
+                dayColumn(snapshot, day: day, showsName: false)
             }.frame(width: 100, alignment: .leading)
-            VStack(alignment: .leading, spacing: roomy ? 7 : 5) {
-                ForEach(Array(([now].compactMap { $0 } + next).enumerated()), id: \.offset) { _, lesson in
-                    let isNow = lesson.start <= entry.date
-                    // The left column already names the day; only say it again for a lesson on a different one.
-                    let otherDay = Calendar.current.isDate(lesson.start, inSameDayAs: day) ? nil : caption(for: lesson)
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        // Times never wrap: they take the width they need and the subject gives way.
-                        Text(isNow ? "Now" : time(lesson.start)).font(.caption.weight(.semibold)).monospacedDigit()
-                            .foregroundStyle(isNow ? Color.teal : .primary)
-                            .lineLimit(1).fixedSize().frame(minWidth: 46, alignment: .leading)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(lesson.subject).font(.subheadline.weight(.semibold)).lineLimit(1)
-                            Text([otherDay, lesson.room.isEmpty ? nil : lesson.room].compactMap { $0 }.joined(separator: " · "))
-                                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                        }
-                        Spacer(minLength: 0)
-                    }
-                    // The lesson in progress sits on a soft teal band; every row has the same inset so columns align.
-                    .padding(.horizontal, 6).padding(.vertical, 3)
-                    .background { if isNow { RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.teal.opacity(0.2)) } }
-                }
-                if now == nil && next.isEmpty { Text("No lessons coming up").font(.subheadline).foregroundStyle(.secondary) }
+            // As many lessons as fit at the reader's text size: three normally, fewer as the text grows.
+            ViewThatFits(in: .vertical) {
+                lessonList(snapshot, day: day, rows: 3)
+                lessonList(snapshot, day: day, rows: 2)
+                lessonList(snapshot, day: day, rows: 1)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func dayColumn(_ snapshot: WidgetSnapshot, day: Date, showsName: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            cycle(snapshot, on: day, font: .title3.weight(.semibold))
+            Text(day.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
+                .lineLimit(2).minimumScaleFactor(0.8)
+            if showsName {
+                Spacer(minLength: 0)
+                Text(snapshot.childName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+            }
+        }
+    }
+
+    private func lessonList(_ snapshot: WidgetSnapshot, day: Date, rows: Int) -> some View {
+        let now = snapshot.current(at: entry.date)
+        let next = snapshot.upcoming(after: entry.date, limit: now == nil ? rows : rows - 1)
+        return VStack(alignment: .leading, spacing: 7) {
+            ForEach(Array(([now].compactMap { $0 } + next).enumerated()), id: \.offset) { _, lesson in
+                let isNow = lesson.start <= entry.date
+                // The left column already names the day; only say it again for a lesson on a different one.
+                let otherDay = Calendar.current.isDate(lesson.start, inSameDayAs: day) ? nil : caption(for: lesson)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    // Times never wrap: they take the width they need and the subject gives way.
+                    Text(isNow ? "Now" : time(lesson.start)).font(.caption.weight(.semibold)).monospacedDigit()
+                        .foregroundStyle(isNow ? Color.teal : .primary)
+                        .lineLimit(1).fixedSize().frame(minWidth: 46, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(lesson.subject).font(.subheadline.weight(.semibold)).lineLimit(1)
+                        Text([otherDay, lesson.room.isEmpty ? nil : lesson.room].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                }
+                // The lesson in progress sits on a soft teal band; every row has the same inset so columns align.
+                .padding(.horizontal, 6).padding(.vertical, 3)
+                .background { if isNow { RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.teal.opacity(0.2)) } }
+            }
+            if now == nil && next.isEmpty { Text("No lessons coming up").font(.subheadline).foregroundStyle(.secondary) }
+        }
     }
 
     private func rectangular(_ snapshot: WidgetSnapshot) -> some View {
