@@ -181,3 +181,86 @@ final class WeakScrollView {
         }
     }
 }
+
+/// A small fanned pile of the assessment's media beside its title: a glance at what's attached, and a shortcut down to it.
+struct AttachmentStack: View {
+    @EnvironmentObject private var model: AppModel
+    let attachments: [AssessmentAttachment]
+    /// Media the reader has rotated below, so the pile matches what they'll find.
+    var rotated: [String: Data] = [:]
+    let action: () -> Void
+    private static let cardSize = CGSize(width: 44, height: 56)
+    private var shown: [AssessmentAttachment] { Array(attachments.prefix(3)) }
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                // The first file sits on top; the others fan out behind it.
+                ForEach(Array(shown.enumerated().reversed()), id: \.element.id) { index, attachment in
+                    AttachmentThumbnail(attachment: attachment, data: rotated[attachment.id])
+                        .frame(width: Self.cardSize.width, height: Self.cardSize.height)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(.white, lineWidth: 2))
+                        .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+                        .rotationEffect(.degrees(fan(index)), anchor: .bottom)
+                        .offset(x: index == 1 ? 6 : (index == 2 ? -4 : 0))
+                }
+            }
+            .frame(width: Self.cardSize.width + 18, height: Self.cardSize.height + 8)
+            .overlay(alignment: .topTrailing) {
+                if attachments.count > 1 {
+                    Text("\(attachments.count)").font(.caption2.weight(.bold)).monospacedDigit()
+                        .foregroundStyle(.white).padding(.horizontal, 5).frame(minWidth: 18, minHeight: 18)
+                        .background(Capsule().fill(.tint)).offset(x: 4, y: -6)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PileButtonStyle())
+        .accessibilityLabel(attachments.count == 1 ? "1 photo or document" : "\(attachments.count) photos and documents")
+        .accessibilityHint("Scrolls down to them")
+        .accessibilityIdentifier("assessment-attachment-stack")
+    }
+    private func fan(_ index: Int) -> Double { index == 0 ? -3 : (index == 1 ? 9 : -12) }
+}
+
+/// Lifts the pile a touch while pressed, like picking up a stack of prints.
+private struct PileButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 1.08 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+private struct AttachmentThumbnail: View {
+    @EnvironmentObject private var model: AppModel
+    let attachment: AssessmentAttachment
+    var data: Data?
+    @State private var image: UIImage?
+    @State private var failed = false
+    var body: some View {
+        ZStack {
+            Color(.secondarySystemBackground)
+            if let image { Image(uiImage: image).resizable().scaledToFill() }
+            else if failed { Image(systemName: "doc.text").font(.title3).foregroundStyle(.secondary) }
+            else { ProgressView().controlSize(.mini) }
+        }
+        .task(id: data) { await load() }
+    }
+    private func load() async {
+        let value: Data
+        if let data { value = data }
+        else if model.isDemo { value = Demo.mediaData(attachment) }
+        else if let client = model.client, let fetched = try? await client.attachmentData(attachment) { value = fetched }
+        else { failed = true; return }
+        let size = CGSize(width: 132, height: 168)
+        let thumbnail = await Task.detached(priority: .utility) { () -> UIImage? in
+            if value.starts(with: Data("%PDF-".utf8)) {
+                return PDFDocument(data: value)?.page(at: 0)?.thumbnail(of: size, for: .mediaBox)
+            }
+            return UIImage(data: value)?.preparingThumbnail(of: size)
+        }.value
+        guard !Task.isCancelled else { return }
+        if let thumbnail { image = thumbnail } else { failed = true }
+    }
+}

@@ -37,6 +37,20 @@ final class ReaderUITests: XCTestCase {
         capture("Full bleed report")
     }
 
+    func testAttachmentStackJumpsToFiles() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        app.staticTexts["Reading journal feedback"].tap()
+        let stack = app.buttons["assessment-attachment-stack"]
+        XCTAssertTrue(stack.waitForExistence(timeout: 5), "Assessments with media show a pile beside the title")
+        XCTAssertGreaterThan(stack.frame.midX, app.frame.midX, "The pile sits on the right")
+        let header = app.staticTexts["Photos & Documents"]
+        stack.tap()
+        let deadline = Date().addingTimeInterval(3)
+        while !(header.exists && header.isHittable) && Date() < deadline { usleep(100_000) }
+        XCTAssertTrue(header.exists && header.isHittable, "Tapping the pile scrolls down to the files")
+        XCTAssertLessThan(header.frame.minY, app.frame.midY, "The files section lands near the top")
+    }
+
     func testInlineWordDocumentScrollsWithThePage() {
         let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
         app.staticTexts["Reading journal feedback"].tap()

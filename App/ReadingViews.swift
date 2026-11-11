@@ -209,9 +209,11 @@ struct AssessmentDetailView: View {
     @State private var overviewExpanded = false
     @State private var rotatedMedia: [String: Data] = [:]
     var body: some View {
+        ScrollViewReader { proxy in
         List {
             Section {
                 // A plain row, not a section header: plain lists pin headers over the content scrolling beneath.
+                HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     // Same order as the assessments list: subject, title, date.
                     SubjectPill(subject: assessment.subject, context: assessment.displayTitle)
@@ -230,8 +232,14 @@ struct AssessmentDetailView: View {
                             Text(teacher.name).readingStyle(.meta)
                         }
                     }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                    if !attachments.isEmpty {
+                        AttachmentStack(attachments: attachments, rotated: rotatedMedia) {
+                            withAnimation(.smooth(duration: 0.5)) { proxy.scrollTo("assessment-files", anchor: .top) }
+                        }.padding(.top, 4).transition(.scale(scale: 0.6).combined(with: .opacity))
+                    }
                 }.textCase(nil)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: attachments.isEmpty)
                     .padding(.bottom, 4)
                     .listRowSeparator(.hidden)
             }.listSectionSeparator(.hidden)
@@ -263,7 +271,7 @@ struct AssessmentDetailView: View {
                             .listRowSeparator(.hidden).listSectionSeparator(.hidden)
                     }
                     Section {
-                        ReadingSectionHeader(title: "Photos & Documents").listRowSeparator(.hidden)
+                        ReadingSectionHeader(title: "Photos & Documents").listRowSeparator(.hidden).id("assessment-files")
                         if loadingAttachments { ProgressView("Finding photos & documents…") }
                         if let attachmentError { Text(attachmentError).font(.caption).foregroundStyle(.secondary) }
                         ForEach(attachments) { attachment in
@@ -273,7 +281,7 @@ struct AssessmentDetailView: View {
                         if !loadingAttachments && attachments.isEmpty && attachmentError == nil {
                             Text("No files have been released for this assessment.").foregroundStyle(.secondary)
                         }
-                    }.listRowSeparator(.hidden).listSectionSeparator(.hidden).id("assessment-files")
+                    }.listRowSeparator(.hidden).listSectionSeparator(.hidden)
                 }
             }.listStyle(.plain).listSectionSpacing(8).listRowSeparator(.hidden).listSectionSeparator(.hidden)
                 .contentMargins(.top, 8, for: .scrollContent).overlay { if loading { ProgressView("Reading assessment…").padding(20).background(.regularMaterial) } }
@@ -287,6 +295,7 @@ struct AssessmentDetailView: View {
                         }.accessibilityLabel("Share assessment").disabled(details == nil || preparingPrint)
                     }
                 }
+        }
                 .navigationTitle("Assessment").navigationBarTitleDisplayMode(.inline).task { await load() }
     }
     private func shareAssessment() async {
