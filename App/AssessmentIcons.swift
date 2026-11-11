@@ -133,17 +133,28 @@ struct AssessmentRowIcon: View {
 struct SubjectPill: View {
     let subject: String
     var context: String = ""
+    @Environment(\.colorScheme) private var scheme
     var body: some View {
         SubjectStyle(subject: subject, context: context) { identity in
+            // A fine ring in the subject's colour rather than a filled badge, so the pill identifies without outshouting the title.
             HStack(spacing: 5) {
-                Image(systemName: identity.symbol).font(.caption2.weight(.semibold)).accessibilityHidden(true)
-                Text(subject).font(.caption.weight(.semibold)).lineLimit(1)
+                Image(systemName: identity.symbol).font(.caption2.weight(.medium)).accessibilityHidden(true)
+                Text(subject).font(.caption.weight(.medium)).lineLimit(1)
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 9).padding(.vertical, 4)
-            .background(identity.color, in: Capsule())
+            .foregroundStyle(identity.ink(dark: scheme == .dark))
+            .padding(.horizontal, 9).padding(.vertical, 3)
+            .overlay(Capsule().strokeBorder(identity.color.opacity(scheme == .dark ? 0.6 : 0.45), lineWidth: 1))
             .accessibilityElement(children: .combine)
             .accessibilityLabel(subject)
         }
+    }
+}
+
+extension SubjectIdentity {
+    /// The family hue at a strength that reads as text on the page background in either appearance.
+    func ink(dark: Bool) -> Color {
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(color).getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return dark ? Color(hue: h, saturation: s * 0.55, brightness: 0.92) : Color(hue: h, saturation: s, brightness: min(b, 0.55))
     }
 }
