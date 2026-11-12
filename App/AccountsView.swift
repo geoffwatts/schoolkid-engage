@@ -17,9 +17,12 @@ struct AccountsView: View {
                             model.selectAccount(account.id); dismiss()
                         } label: {
                             HStack(spacing: 12) {
+                                // Parents think of an account by their children, so they lead; the signed-in parent and
+                                // school follow. Until the school has listed the children, the parent's name leads.
+                                let kids = model.knownChildren(of: account.id).map { ListFormatter.localizedString(byJoining: $0.map(\.name)) }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(account.name).font(.body.weight(.medium)).foregroundStyle(.primary)
-                                    Text([account.username, account.school.url.host ?? ""].filter { !$0.isEmpty }.joined(separator: " · "))
+                                    Text(kids.flatMap { $0.isEmpty ? nil : $0 } ?? account.name).font(.body.weight(.medium)).foregroundStyle(.primary)
+                                    Text([kids?.isEmpty == false ? account.name : account.username, model.schoolName(of: account)].filter { !$0.isEmpty }.joined(separator: " · "))
                                         .font(.subheadline).foregroundStyle(.secondary)
                                 }
                                 Spacer(minLength: 0)

@@ -247,6 +247,7 @@ final class AppModel: ObservableObject {
         do {
             let updated = accounts.filter { $0.id != account.id }; try store.save(updated)
             await clients[account.id]?.forgetSession(); clients.removeValue(forKey: account.id); accounts = updated
+            childrenByAccount.removeValue(forKey: account.id); otherChildrenRequested.remove(account.id)
             clearWidgets()
             UpdateNotifier.shared.forget(except: Set(updated.map(\.id)))
             if accountID == account.id {
@@ -262,7 +263,7 @@ final class AppModel: ObservableObject {
         do {
             let loaded = try await client.children()
             guard selected == accountID, !Task.isCancelled, !isDemo else { return }
-            children = loaded
+            children = loaded; if let selected { childrenByAccount[selected] = loaded }
             if let preferred = preferredChildID, loaded.contains(where: { $0.id == preferred }) {
                 if childID != preferred { childID = preferred; selectionVersion = UUID() }
             } else if !loaded.contains(where: { $0.id == childID }) { childID = loaded.first?.id; selectionVersion = UUID() }
@@ -272,6 +273,76 @@ final class AppModel: ObservableObject {
             self.error = error.localizedDescription
         }
     }
+    // MARK: Child switcher
+
+    /// Each saved account's children, as its school last listed them. Held in memory only: child names aren't saved
+    /// on the device, so other schools' children are asked for each time the app starts.
+    @Published private var childrenByAccount: [UUID: [Child]] = [:]
+    private var otherChildrenRequested: Set<UUID> = []
+    /// An account's children, when its school has listed them this session.
+    func knownChildren(of account: UUID) -> [Child]? { account == accountID && !children.isEmpty ? children : childrenByAccount[account] }
+    /// The school's public name, when it's been looked up, otherwise its web address.
+    func schoolName(of account: SavedAccount) -> String {
+        schoolNames[account.school.url.absoluteString] ?? account.school.url.host ?? account.school.url.absoluteString
+    }
+    /// Asks every other saved account's school for its children (and its public name), once per launch, so the child
+    /// switcher can offer them. An account whose school doesn't answer (offline, expired sign-in) is retried next time.
+    func loadOtherAccountsChildren() async {
+        for account in accounts where account.id != accountID && !otherChildrenRequested.contains(account.id) {
+            guard let client = clients[account.id] else { continue }
+            otherChildrenRequested.insert(account.id)
+            Task { await loadSchoolName(account.school) }
+            if let loaded = try? await client.children() { childrenByAccount[account.id] = loaded }
+            else { otherChildrenRequested.remove(account.id) }
+        }
+    }
+    /// A child in the switcher, with the saved account it's reached through (nil in the demo).
+    struct ChildChoice: Identifiable, Hashable {
+        let accountID: UUID?
+        let child: Child
+        var id: String { "\(accountID?.uuidString ?? "demo")-\(child.id)" }
+    }
+    /// One school in the switcher: its children, or, until its school has listed them, just the account to switch to.
+    struct SwitcherSchool: Identifiable {
+        let id: String
+        let name: String
+        let account: UUID?
+        let children: [ChildChoice]
+    }
+    /// Every child across the saved accounts, grouped by school in the accounts' order. Two parent logins at the same
+    /// school share a group, and a child both can see appears once (through the current account when it's one of them).
+    var switcherSchools: [SwitcherSchool] {
+        if isDemo { return [SwitcherSchool(id: "demo", name: schoolName, account: nil, children: children.map { ChildChoice(accountID: nil, child: $0) })] }
+        var order: [String] = []; var byURL: [String: [SavedAccount]] = [:]
+        for account in accounts {
+            let url = account.school.url.absoluteString
+            if byURL[url] == nil { order.append(url) }
+            byURL[url, default: []].append(account)
+        }
+        return order.map { url in
+            let schoolAccounts = byURL[url]!.sorted { a, _ in a.id == accountID }
+            var seen: Set<String> = []; var choices: [ChildChoice] = []
+            for account in schoolAccounts {
+                for child in (account.id == accountID ? children : childrenByAccount[account.id] ?? []) where seen.insert(child.id).inserted {
+                    choices.append(ChildChoice(accountID: account.id, child: child))
+                }
+            }
+            let first = schoolAccounts[0]
+            return SwitcherSchool(id: url, name: schoolNames[url] ?? first.school.url.host ?? url, account: first.id, children: choices)
+        }
+    }
+    /// Only worth showing when there's a choice: more than one child, or more than one school.
+    var showsChildSwitcher: Bool {
+        let schools = switcherSchools
+        return schools.count > 1 || schools.reduce(0) { $0 + $1.children.count } > 1
+    }
+    func isSelected(_ choice: ChildChoice) -> Bool { choice.accountID == (isDemo ? nil : accountID) && choice.child.id == childID }
+    /// Switches to a child, changing school account first when the child is reached through another one.
+    func choose(_ choice: ChildChoice) {
+        guard let account = choice.accountID else { selectChild(choice.child.id); return }
+        open(account: account, child: choice.child.id)
+    }
+
     private func loadSchoolName(_ school: School) async {
         guard schoolNames[school.url.absoluteString] == nil else { return }
         let publicClient = SEQTAClient(school: school, transport: ActivityTransport())

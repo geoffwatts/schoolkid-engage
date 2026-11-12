@@ -63,7 +63,7 @@ struct RootView: View {
                 .id(model.selectionVersion)
             }
         }
-        .task(id: model.accountID) { await model.loadChildren() }
+        .task(id: model.accountID) { await model.loadChildren(); await model.loadOtherAccountsChildren() }
         .onChange(of: notifier.destination, initial: true) { _, destination in
             // A tapped update notification opens the Updates tab for its account and child.
             guard let destination else { return }
@@ -114,6 +114,19 @@ struct WelcomeView: View {
 struct SchoolToolbar: ViewModifier {
     @EnvironmentObject private var model: AppModel
     @Binding var showAccounts: Bool
+    /// A school's children, ticked when selected; a school that hasn't listed them yet offers itself instead.
+    @ViewBuilder private func rows(for school: AppModel.SwitcherSchool) -> some View {
+        if school.children.isEmpty, let account = school.account {
+            Button { model.open(account: account, child: nil) } label: {
+                if model.accountID == account { Label(school.name, systemImage: "checkmark") } else { Text(school.name) }
+            }
+        }
+        ForEach(school.children) { choice in
+            Button { model.choose(choice) } label: {
+                if model.isSelected(choice) { Label(choice.child.name, systemImage: "checkmark") } else { Text(choice.child.name) }
+            }
+        }
+    }
     func body(content: Content) -> some View {
         content.navigationBarTitleDisplayMode(.inline).toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -123,13 +136,12 @@ struct SchoolToolbar: ViewModifier {
                 }.accessibilityLabel("Switch school account")
             }
             ToolbarItem(placement: .topBarTrailing) {
-                // Only worth showing when there's a choice to make.
-                if model.children.count > 1 {
+                // Every child across every saved school, grouped by school; only shown when there's a choice to make.
+                if model.showsChildSwitcher {
+                    let schools = model.switcherSchools
                     Menu {
-                        ForEach(model.children) { child in
-                            Button { model.selectChild(child.id) } label: {
-                                if model.childID == child.id { Label(child.name, systemImage: "checkmark") } else { Text(child.name) }
-                            }
+                        ForEach(schools) { school in
+                            if schools.count > 1 { Section(school.name) { rows(for: school) } } else { rows(for: school) }
                         }
                     } label: { Image(systemName: "person.2") }
                     .accessibilityLabel("Select child: \(model.child?.name ?? "None")")
