@@ -76,7 +76,8 @@ public actor SEQTAClient {
 
     public func activity() async throws -> [ActivityItem] {
         let payload = try await request("heartbeat", body: .object(["timestamp": .string("1970-01-01 00:00:00")]))
-        return try payload["notifications"].requiredArray().map(ActivityItem.init).sorted { $0.timestamp > $1.timestamp }
+        // Each event stands alone: one we can't fully read shouldn't take the whole feed (or its alerts) down with it.
+        return try payload["notifications"].requiredArray().compactMap(ActivityItem.lenient).sorted { $0.timestamp > $1.timestamp }
     }
 
     /// School notices are account-wide; the upstream request does not take a child ID.

@@ -229,6 +229,19 @@ final class SEQTAKitTests: XCTestCase {
         XCTAssertEqual(body["timestamp"].string, "1970-01-01 00:00:00")
     }
 
+    func testBellFeedKeepsEventsItCannotFullyRead() async throws {
+        let transport = MockTransport([.init(json: #"{"status":"200","payload":{"notifications":[{"notificationID":7,"timestamp":"2026-11-10T12:00:00","type":"coneqtassessments","coneqtAssessments":{"title":"Feedback released","studentID":1,"assessmentID":42}},{"timestamp":"2026-11-09T12:00:00","type":"report","report":{"title":"Semester report available"}},{"notificationID":9,"timestamp":"2026-11-08T12:00:00","type":"mystery","payload":{"title":"Excursion reminder","subtitle":"Bring a hat"}},{"notificationID":10,"timestamp":"2026-11-07T12:00:00","type":"mystery"},"not an object"]}}"#)])
+        let feed = try await SEQTAClient(account: try account(), transport: transport).activity()
+        // A malformed event no longer takes the feed down: titles are found wherever they are, a well-formed event
+        // with none keeps the generic row, and something with no title, ID or type is skipped.
+        XCTAssertEqual(feed.map(\.title), ["Feedback released", "Semester report available", "Excursion reminder", "School update"])
+        XCTAssertEqual(feed[0].assessment?.id, "42")
+        XCTAssertNil(feed[1].assessment); XCTAssertNil(feed[2].assessment)
+        XCTAssertEqual(feed[2].subtitle, "Bring a hat")
+        // Without a notificationID the event still gets a stable identity, so it isn't news on every read.
+        XCTAssertEqual(feed[1].id, "untyped:2026-11-09T12:00:00:Semester report available")
+    }
+
     private func bell(_ id: Int, _ timestamp: String) throws -> ActivityItem {
         try ActivityItem(json: .object(["notificationID": .number(Double(id)), "type": .string("coneqtassessments"), "timestamp": .string(timestamp),
                                         "coneqtAssessments": .object(["title": .string("Item \(id)")])]))

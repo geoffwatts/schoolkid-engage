@@ -29,6 +29,32 @@ public struct ActivityItem: Identifiable, Sendable {
             ]))
         } else { assessment = nil }
     }
+
+    private init(id: String, type: String, timestamp: String, title: String, subtitle: String, childID: String?, raw: JSONValue) {
+        self.id = id; self.type = type; self.timestamp = timestamp; self.title = title; self.subtitle = subtitle
+        self.childID = childID; self.assessment = nil; self.raw = raw
+    }
+
+    /// Reads one feed event without letting it spoil the rest of the feed. An event in a shape we don't fully
+    /// understand (schools can post kinds we've never seen) still shows by whatever title it carries, as a plain row
+    /// with no link; one with neither a title nor the usual ID and type has nothing to show and is skipped.
+    public static func lenient(_ json: JSONValue) -> ActivityItem? {
+        let parsed = try? ActivityItem(json: json)
+        if let parsed, parsed.raw["title"].string != nil { return parsed }
+        let type = json["type"].string ?? ""
+        let key = type == "coneqtassessments" ? "coneqtAssessments" : type
+        // The event's own object first, then any nested object with a title, then the top level.
+        var nested: [JSONValue] = []
+        if case .object(let fields) = json { nested = fields.keys.sorted().map { fields[$0]! }.filter { $0["title"].string != nil } }
+        let body = [json[key]].filter { $0["title"].string != nil }.first ?? nested.first ?? json
+        // Nothing titled anywhere: an otherwise well-formed event keeps its generic "School update" row, as before.
+        guard let title = body["title"].string?.trimmingCharacters(in: .whitespacesAndNewlines), !title.isEmpty else { return parsed }
+        let timestamp = json["timestamp"].string ?? ""
+        // Without the school's ID, derive a stable one so the event isn't counted as new on every read.
+        let id = json["notificationID"].string.flatMap { $0.isEmpty ? nil : $0 } ?? "untyped:\(timestamp):\(title)"
+        return ActivityItem(id: id, type: type, timestamp: timestamp, title: title, subtitle: body["subtitle"].string ?? "",
+                            childID: body["studentID"].string ?? json["studentID"].string, raw: body)
+    }
 }
 
 public struct AssessmentAttachment: Identifiable, Sendable {
