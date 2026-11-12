@@ -209,7 +209,8 @@ final class AppModel: ObservableObject {
         }
     }
     private func reminderNotes(for lessons: [WidgetSnapshot.Lesson]) -> [String: [ReminderNote]] {
-        Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) }, kind: LessonKind.key(for:))
+        Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) },
+                        kind: LessonKind.key(for:), symbol: LessonKind.symbol(for:))
     }
     /// Re-reads the rules into the current snapshot without fetching the timetable again.
     private func applyReminders() {

@@ -48,6 +48,16 @@ final class RemindersTests: XCTestCase {
                        [ReminderNote(text: "Take tuba", color: "blue"), ReminderNote(text: "PE uniform")])
     }
 
+    func testANoteTakesTheIconOfTheFirstLessonThatSetItOff() {
+        let symbol: (String) -> String? = { ["Physical Education": "figure.run", "Dance": "figure.dance"][$0] }
+        let rules = [ReminderRule(note: "PE uniform", kinds: ["health"]), ReminderRule(note: "Take tuba", subjects: ["Music"])]
+        let notes = Reminders.notes(rules: rules, lessons: week, kind: kind, symbol: symbol)
+        XCTAssertEqual(notes["2026-11-16"]?.map(\.symbol), ["figure.run"])
+        XCTAssertEqual(notes["2026-11-18"]?.map(\.symbol), ["figure.dance", nil], "Dance comes first that day; Music has no icon")
+        // Snapshots written before icons existed still load, without one.
+        XCTAssertNil(try JSONDecoder().decode(ReminderNote.self, from: Data(#"{"text":"PE uniform"}"#.utf8)).symbol)
+    }
+
     func testRulesSurviveARoundTrip() throws {
         let rule = ReminderRule(note: "PE uniform", isEnabled: false, subjects: ["Dance"], kinds: ["health"], color: "green")
         XCTAssertEqual(try JSONDecoder().decode(ReminderRule.self, from: JSONEncoder().encode(rule)), rule)

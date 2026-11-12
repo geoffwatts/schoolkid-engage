@@ -26,17 +26,22 @@ public struct ReminderRule: Codable, Identifiable, Equatable, Sendable {
     }
 }
 
-/// One reminder as shown on a day: its text and the colour chosen for it.
+/// One reminder as shown on a day: its text, the colour chosen for it, and the icon of the lesson that set it off.
 public struct ReminderNote: Codable, Equatable, Hashable, Sendable {
     public let text: String
     public let color: String?
-    public init(text: String, color: String? = nil) { self.text = text; self.color = color }
+    /// The SF Symbol of the day's first lesson that set the reminder off, as shown beside that subject elsewhere in
+    /// the app; nil when that subject has no icon of its own. Absent in snapshots written before it existed.
+    public let symbol: String?
+    public init(text: String, color: String? = nil, symbol: String? = nil) { self.text = text; self.color = color; self.symbol = symbol }
 }
 
 public enum Reminders {
     /// The notes for each day ("yyyy-MM-dd" → notes), from the switched-on rules with a note, in the rules' order.
-    /// `kind` classifies a lesson name as "family/specialism".
-    public static func notes(rules: [ReminderRule], lessons: [(subject: String, day: String)], kind: (String) -> String) -> [String: [ReminderNote]] {
+    /// `kind` classifies a lesson name as "family/specialism"; `symbol` gives a lesson name's icon, if it has one.
+    /// Lessons are taken in the order given, so a note's icon is that of the earliest lesson that set it off.
+    public static func notes(rules: [ReminderRule], lessons: [(subject: String, day: String)], kind: (String) -> String,
+                             symbol: (String) -> String? = { _ in nil }) -> [String: [ReminderNote]] {
         let active = rules.filter { $0.isEnabled && !$0.trimmedNote.isEmpty && !($0.subjects.isEmpty && $0.kinds.isEmpty) }
         guard !active.isEmpty else { return [:] }
         var kinds: [String: String] = [:]
@@ -45,11 +50,12 @@ public enum Reminders {
         var result: [String: [ReminderNote]] = [:]
         for (day, subjects) in subjectsByDay {
             var notes: [ReminderNote] = []
-            for rule in active where subjects.contains(where: { subject in
-                let lessonKind = kinds[subject] ?? kind(subject); kinds[subject] = lessonKind
-                return rule.matches(subject: subject, kind: lessonKind)
-            }) {
-                if !notes.contains(where: { $0.text == rule.trimmedNote }) { notes.append(ReminderNote(text: rule.trimmedNote, color: rule.color)) }
+            for rule in active {
+                guard let trigger = subjects.first(where: { subject in
+                    let lessonKind = kinds[subject] ?? kind(subject); kinds[subject] = lessonKind
+                    return rule.matches(subject: subject, kind: lessonKind)
+                }), !notes.contains(where: { $0.text == rule.trimmedNote }) else { continue }
+                notes.append(ReminderNote(text: rule.trimmedNote, color: rule.color, symbol: symbol(trigger)))
             }
             if !notes.isEmpty { result[day] = notes }
         }

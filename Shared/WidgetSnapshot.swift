@@ -97,8 +97,9 @@ enum ReminderPalette {
 }
 
 /// The reader's reminders for a day, each on its own chip in the colour chosen for it, at the top of every screen and
-/// widget. Chips run left to right and wrap onto another line only when the next doesn't fit. A day other than today
-/// is named in the first chip ("Tomorrow: PE uniform").
+/// widget. Chips run left to right and wrap onto another line only when the next doesn't fit. Each chip leads with the
+/// icon of the subject that set it off (a backpack when that subject has none). A day other than today is named in
+/// the first chip ("Tomorrow: PE uniform").
 struct ReminderBar: View {
     let day: String?
     let notes: [ReminderNote]
@@ -115,18 +116,20 @@ struct ReminderBar: View {
     }
     private func chip(_ note: ReminderNote, first: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: compact ? 4 : 6) {
-            if first { Image(systemName: "backpack.fill").foregroundStyle(.primary.opacity(0.7)) }
+            Image(systemName: note.symbol ?? "backpack.fill").foregroundStyle(.primary.opacity(0.7))
             (Text(first ? day.map { "\($0): " } ?? "" : "").foregroundStyle(.secondary) + Text(note.text))
                 .lineLimit(compact ? compactLines : 3)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, compact ? 7 : 10).padding(.vertical, compact ? 3 : 6)
+        // Fill the row's height, so chips side by side match even when one subject's icon stands taller.
+        .frame(maxHeight: .infinity)
         .background(RoundedRectangle(cornerRadius: compact ? 7 : 10, style: .continuous).fill(ReminderPalette.color(note.color).opacity(0.3)))
     }
 }
 
 /// Lays its views out left to right, starting a new line when the next one won't fit; a view wider than the space
-/// is offered the full width (so its text wraps).
+/// is offered the full width (so its text wraps). Every view in a row is offered that row's height.
 struct ChipFlow: Layout {
     var spacing: CGFloat = 4
     private func rows(_ subviews: Subviews, width: CGFloat?) -> [(views: [(index: Int, size: CGSize)], height: CGFloat)] {
@@ -153,7 +156,7 @@ struct ChipFlow: Layout {
         for row in rows(subviews, width: bounds.width) {
             var x = bounds.minX
             for item in row.views {
-                subviews[item.index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: min(item.size.width, bounds.width), height: item.size.height))
+                subviews[item.index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: min(item.size.width, bounds.width), height: row.height))
                 x += item.size.width + spacing
             }
             y += row.height + spacing

@@ -24,6 +24,11 @@ struct LessonKind: Identifiable, Hashable {
         LessonKind(key: "humanities", label: "Humanities", symbol: "globe.asia.australia")
     ]
     static func named(_ key: String) -> LessonKind? { all.first { $0.key == key } }
+    /// A lesson's icon, as shown beside it elsewhere in the app; nil for a subject with no icon of its own.
+    static func symbol(for subject: String) -> String? {
+        let identity = SubjectIdentity.fallback(subject: subject)
+        return identity.family == .general ? nil : identity.symbol
+    }
     /// A lesson's kind as "family/specialism", from the same on-device rules that pick each subject's icon and colour.
     static func key(for subject: String) -> String {
         let identity = SubjectIdentity.fallback(subject: subject)
@@ -99,7 +104,9 @@ struct ReminderEditor: View {
                 } header: { Text("Note") }
                 Section {
                     ColourSwatches(selection: $rule.color)
-                    ReminderBar(day: nil, notes: [ReminderNote(text: rule.trimmedNote.isEmpty ? "Your note" : rule.trimmedNote, color: rule.color)])
+                    ReminderBar(day: nil, notes: [ReminderNote(text: rule.trimmedNote.isEmpty ? "Your note" : rule.trimmedNote, color: rule.color,
+                                                                symbol: rule.kinds.first.flatMap { LessonKind.named($0)?.symbol }
+                                                                    ?? rule.subjects.first.flatMap(LessonKind.symbol(for:)))])
                         .listRowBackground(Color(.systemBackground))
                 } header: { Text("Colour") }
                 Section {
