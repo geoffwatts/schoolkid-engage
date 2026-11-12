@@ -63,7 +63,9 @@ struct GradingView: View {
         VStack(alignment: .leading, spacing: 20) {
             // A table fitted to the page, long criteria wrapping; at accessibility text sizes the columns can't fit,
             // so each criterion gets its own line with its marks beneath.
+            // A labelled group, not one element: VoiceOver (and UI tests) still reach each criterion and mark inside.
             Group { if typeSize.isAccessibilitySize { stackedMarks } else { marksTable } }
+                .accessibilityElement(children: .contain)
                 .accessibilityLabel("SEQTA grades")
             ForEach(Array(criteria.enumerated()), id: \.offset) { _, criterion in
                 if let lines = criterion["rubric"]["lines"].array, !lines.isEmpty {
