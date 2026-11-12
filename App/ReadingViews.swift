@@ -75,27 +75,80 @@ struct AssessmentsView: View {
     private var listKey: String { "\(model.childID ?? "")-\(showingPast)-\(courseID ?? "")" }
     @State private var loading = false
     @State private var error: String?
+    // Sorting and filtering, remembered separately for Results and Upcoming.
+    @AppStorage("assessmentResultsSort") private var resultsSort = AssessmentSort.newestFirst
+    @AppStorage("assessmentUpcomingSort") private var upcomingSort = AssessmentSort.oldestFirst
+    @AppStorage("assessmentResultsShow") private var resultsShow = AssessmentShow.all
+    @AppStorage("assessmentUpcomingShow") private var upcomingShow = AssessmentShow.all
+    @AppStorage(AssessmentMark.hideKey) private var hideMarks = false
+    /// Upcoming has no per-subject request, so its subject filter works on the loaded list.
+    @State private var upcomingSubject: String?
+    @State private var search = ""
+    private var sortChoice: Binding<AssessmentSort> { showingPast ? $resultsSort : $upcomingSort }
+    private var showChoice: Binding<AssessmentShow> { showingPast ? $resultsShow : $upcomingShow }
+    /// Ordering by mark would give hidden marks away, so it falls back to the default while they're hidden.
+    private var sort: AssessmentSort {
+        let chosen = sortChoice.wrappedValue
+        return hideMarks && chosen.usesMarks ? (showingPast ? .newestFirst : .oldestFirst) : chosen
+    }
+    private var sortOptions: [(AssessmentSort, String)] {
+        showingPast
+            ? [(.newestFirst, "Newest first"), (.oldestFirst, "Oldest first"), (.subject, "Subject")]
+                + (hideMarks ? [] : [(.highestMark, "Highest mark"), (.lowestMark, "Lowest mark")])
+            : [(.oldestFirst, "Due soonest"), (.newestFirst, "Due latest"), (.subject, "Subject")]
+    }
+    private var showOptions: [(AssessmentShow, String)] {
+        showingPast ? [(.all, "All"), (.marked, "With a mark"), (.feedback, "With feedback"), (.awaiting, "Awaiting results")]
+            : [(.all, "All"), (.overdue, "Overdue")]
+    }
+    private var upcomingSubjects: [String] { Array(Set(upcoming.map(\.subject))).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending } }
+    /// Whether anything is narrowing or reordering the list from its default.
+    private var customised: Bool {
+        sort != (showingPast ? .newestFirst : .oldestFirst) || showChoice.wrappedValue != .all || (!showingPast && upcomingSubject != nil)
+    }
+    private func resetFilters() {
+        sortChoice.wrappedValue = showingPast ? .newestFirst : .oldestFirst; showChoice.wrappedValue = .all
+        upcomingSubject = nil; search = ""
+    }
     var body: some View {
         List {
             if let child = model.child {
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
                         Picker("Assessments", selection: $showingPast) { Text("Results").tag(true); Text("Upcoming").tag(false) }.pickerStyle(.segmented)
-                        if showingPast {
-                            Picker("Subject", selection: $courseID) {
-                                Text("All").tag(String?.none)
-                                ForEach(courses) { course in Text("\(course.title) · \(course.term)").tag(Optional(course.id)) }
-                            }.frame(maxWidth: .infinity, minHeight: 44)
-                                .accessibilityIdentifier("assessment-subject-filter")
-                                .padding(.horizontal, 10)
-                                .contentShape(Rectangle())
+                        HStack(spacing: 4) {
+                            if showingPast {
+                                Picker("Subject", selection: $courseID) {
+                                    Text("All").tag(String?.none)
+                                    ForEach(courses) { course in Text("\(course.title) · \(course.term)").tag(Optional(course.id)) }
+                                }.frame(maxWidth: .infinity, minHeight: 44)
+                                    .accessibilityIdentifier("assessment-subject-filter")
+                                    .padding(.horizontal, 10)
+                                    .contentShape(Rectangle())
+                            } else {
+                                Picker("Subject", selection: $upcomingSubject) {
+                                    Text("All").tag(String?.none)
+                                    ForEach(upcomingSubjects, id: \.self) { Text($0).tag(Optional($0)) }
+                                }.frame(maxWidth: .infinity, minHeight: 44)
+                                    .padding(.horizontal, 10)
+                                    .contentShape(Rectangle())
+                            }
+                            sortAndFilterMenu
                         }
                     }.padding(.vertical, 3)
                 }
                 if let error { ErrorRow(message: error, retry: { await load() }) }
-                let items = showingPast ? past : upcoming
-                if items.isEmpty && !loading && error == nil {
+                let loaded = showingPast ? past : upcoming
+                let items = AssessmentListing.arrange(loaded, sort: sort, show: showChoice.wrappedValue,
+                                                      subject: showingPast ? nil : upcomingSubject, search: search)
+                if loaded.isEmpty && !loading && error == nil {
                     ContentUnavailableView(showingPast ? "No results to show" : "All clear for now", systemImage: "checklist", description: Text(showingPast ? "No released results or feedback are available for this selection." : "There are no upcoming assessments for this child."))
+                } else if items.isEmpty && !loading && error == nil {
+                    ContentUnavailableView {
+                        Label("No matching assessments", systemImage: "line.3.horizontal.decrease.circle")
+                    } description: { Text("Nothing here matches the filter or search.") } actions: {
+                        Button("Show all") { resetFilters() }
+                    }
                 }
                 ForEach(items) { assessment in
                     NavigationLink {
@@ -118,11 +171,26 @@ struct AssessmentsView: View {
                 }
             } else { ChildPlaceholder() }
         }.listStyle(.plain).overlay { if loading { ProgressView("Reading assessments…").padding(20).background(.regularMaterial) } }.navigationTitle("Assessments").task(id: model.childID) { await initialLoad() }
+            .searchable(text: $search, prompt: "Search assessments")
             .task(id: "\(showingPast)-\(courseID ?? "")") {
                 guard loadedListKey != listKey else { return }
                 if showingPast { if !courses.isEmpty { await loadPast() } } else { await loadUpcoming() }
             }
             .refreshable { await model.client?.clearCache(); await load(refreshing: true) }
+    }
+    /// Sort order and which assessments show, beside the subject filter; filled in when they differ from the default.
+    private var sortAndFilterMenu: some View {
+        Menu {
+            Picker("Sort by", selection: sortChoice) { ForEach(sortOptions, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.inline)
+            Picker("Show", selection: showChoice) { ForEach(showOptions, id: \.0) { Text($0.1).tag($0.0) } }.pickerStyle(.inline)
+            if customised { Button("Reset to default", systemImage: "arrow.counterclockwise") { resetFilters() } }
+        } label: {
+            Image(systemName: customised ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                .font(.title3).frame(width: 44, height: 44)
+        }
+        .accessibilityLabel("Sort and filter")
+        .accessibilityValue([sortOptions.first { $0.0 == sort }?.1, showOptions.first { $0.0 == showChoice.wrappedValue }?.1]
+            .compactMap { $0 }.joined(separator: ", "))
     }
     private func initialLoad() async {
         guard let child = model.child, loadedCoursesFor != child.id else { return }
@@ -497,13 +565,21 @@ func reportDate(_ value: String) -> String {
 /// a red "Overdue" pill, and/or an outline speech bubble when written feedback has been released. Once there's a mark,
 /// both would be redundant, so they're not shown.
 struct AssessmentMark: View {
+    /// Settings → "Hide marks in lists": marks appear only on the assessment itself; lists show the speech bubble.
+    static let hideKey = "hideMarks"
     let assessment: Assessment
+    @AppStorage(AssessmentMark.hideKey) private var hideMarks = false
     var body: some View {
         HStack(spacing: 8) {
-            if !assessment.grade.isEmpty { Text(assessment.grade).font(.subheadline.bold()) }
-            // A bare score means little without its total, so prefer the percentage when SEQTA gives one.
-            if let percentage = assessment.displayPercentage { Text(percentage).font(.subheadline.bold()).monospacedDigit() }
-            else if !assessment.score.isEmpty { Text(assessment.displayScore).font(.subheadline.bold()) }
+            if hideMarks && hasMark {
+                Image(systemName: "text.bubble").font(.subheadline).foregroundStyle(.primary)
+                    .accessibilityLabel("Result released")
+            } else {
+                if !assessment.grade.isEmpty { Text(assessment.grade).font(.subheadline.bold()) }
+                // A bare score means little without its total, so prefer the percentage when SEQTA gives one.
+                if let percentage = assessment.displayPercentage { Text(percentage).font(.subheadline.bold()).monospacedDigit() }
+                else if !assessment.score.isEmpty { Text(assessment.displayScore).font(.subheadline.bold()) }
+            }
             if !hasMark {
                 if assessment.overdue {
                     Text("Overdue").font(.caption.weight(.semibold)).foregroundStyle(.white)
@@ -517,5 +593,5 @@ struct AssessmentMark: View {
             }
         }
     }
-    private var hasMark: Bool { !assessment.grade.isEmpty || assessment.displayPercentage != nil || !assessment.score.isEmpty }
+    private var hasMark: Bool { assessment.hasMark }
 }

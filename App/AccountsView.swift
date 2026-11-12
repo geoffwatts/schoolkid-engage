@@ -8,6 +8,7 @@ struct AccountsView: View {
     @Environment(\.openURL) private var openURL
     @State private var showSignIn = false
     @State private var removing: SavedAccount?
+    @AppStorage(AssessmentMark.hideKey) private var hideMarks = false
     /// "reminders" when Reminders is showing, so a tapped header reminder can open the sheet straight onto it.
     @State private var path: [String] = []
     var body: some View {
@@ -52,6 +53,11 @@ struct AccountsView: View {
                     } header: { Text("Reminders") } footer: {
                         Text("Show a note such as “PE uniform” at the top of every screen and on the widget on days with certain lessons.")
                     }
+                }
+                Section {
+                    Toggle(isOn: $hideMarks) { Label("Hide marks in lists", systemImage: "eye.slash") }
+                } header: { Text("Assessments") } footer: {
+                    Text("Marks show only when you open an assessment. In lists, a speech bubble shows there’s a result or feedback to read.")
                 }
                 if !model.accounts.isEmpty {
                     Section {

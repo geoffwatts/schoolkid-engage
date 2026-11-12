@@ -387,6 +387,52 @@ final class ReaderUITests: XCTestCase {
         }
     }
 
+    /// Results sort by mark and filter by kind; hiding marks leaves only the speech bubble in the list (and drops the
+    /// mark orders, which would give them away), while the assessment itself still shows its mark.
+    func testAssessmentSortFilterAndHiddenMarks() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo"]
+        app.launch()
+        tab("Assessments", in: app).tap()
+        XCTAssertTrue(app.staticTexts["Reading journal"].waitForExistence(timeout: 10))
+        // Highest mark first: Physics' 94% leads.
+        app.buttons["Sort and filter"].tap()
+        app.buttons["Highest mark"].tap()
+        let titles = ["Forces and motion investigation", "Reading journal", "Still life drawing", "Fractions in action", "Ancient civilisations poster"]
+        let ys = titles.map { app.staticTexts[$0].frame.minY }
+        XCTAssertEqual(ys, ys.sorted(), "94%, 90%, A- (88%), 84%, 76%")
+        // Feedback only: Book talk (feedback, no mark) stays; Ancient civilisations poster (no feedback) goes.
+        app.buttons["Sort and filter"].tap()
+        app.buttons["With feedback"].tap()
+        XCTAssertTrue(app.staticTexts["Book talk"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Ancient civilisations poster"].exists)
+        capture("Assessments sorted and filtered")
+        app.buttons["Sort and filter"].tap()
+        app.buttons["Reset to default"].tap()
+        XCTAssertTrue(app.staticTexts["Ancient civilisations poster"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["94%"].exists)
+        // Hide marks in Settings.
+        app.buttons["Switch school account"].tap()
+        let hide = app.switches["Hide marks in lists"]
+        XCTAssertTrue(hide.waitForExistence(timeout: 5))
+        // Tap the switch itself (the right-hand end of the row); the label alone doesn't toggle it.
+        if (hide.value as? String) != "1" { hide.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
+        XCTAssertEqual(hide.value as? String, "1")
+        app.buttons["Done"].tap()
+        XCTAssertTrue(app.staticTexts["Reading journal"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["94%"].exists, "No marks in the list")
+        XCTAssertFalse(app.staticTexts["B+"].exists)
+        XCTAssertGreaterThan(app.images.matching(NSPredicate(format: "label == 'Result released'")).count, 0)
+        app.buttons["Sort and filter"].tap()
+        XCTAssertFalse(app.buttons["Highest mark"].exists, "Ordering by mark would give marks away")
+        app.buttons["Newest first"].tap()
+        capture("Assessments with marks hidden")
+        // The assessment itself still shows its mark.
+        app.staticTexts["Forces and motion investigation"].tap()
+        // (Every demo assessment opens the same sample marks, 90%.)
+        XCTAssertTrue(app.staticTexts["90%"].waitForExistence(timeout: 5), "Marks still show on the assessment")
+    }
+
     func testSchoolSignInEntry() {
         let app = XCUIApplication()
         app.launch()
