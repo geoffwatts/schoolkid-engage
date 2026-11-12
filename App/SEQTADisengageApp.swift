@@ -10,6 +10,10 @@ struct SEQTADisengageApp: App {
             // The launch argument is only used by UI tests; start each run from default preferences.
             UserDefaults.standard.removeObject(forKey: "timetableWeekView")
             UserDefaults.standard.removeObject(forKey: "reminderRules")
+            // The demo school's cycle length is learned afresh, so a run with another length isn't read as a fortnight.
+            if var maxDays = UserDefaults.standard.dictionary(forKey: "cycleMaxDays") {
+                maxDays["demo"] = nil; UserDefaults.standard.set(maxDays, forKey: "cycleMaxDays")
+            }
             _model = StateObject(wrappedValue: {
             let model = AppModel(); model.startDemo()
             #if DEBUG

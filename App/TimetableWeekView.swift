@@ -15,7 +15,12 @@ struct TimetableWeekView: View {
     /// Points per minute; grows with Dynamic Type so larger text still fits inside each lesson block.
     @ScaledMetric(relativeTo: .caption2) private var fitScale: CGFloat = 0.95
     @ScaledMetric(relativeTo: .caption) private var detailScale: CGFloat = 1.3
-    @ScaledMetric(relativeTo: .caption) private var headerHeight: CGFloat = 36
+    @ScaledMetric(relativeTo: .caption) private var dateHeaderHeight: CGFloat = 36
+    @ScaledMetric(relativeTo: .caption2) private var cycleLineHeight: CGFloat = 15
+    /// Each day's cycle day number ("Day 4" → 4), when SEQTA gives one.
+    private func cycleDay(_ day: Date) -> Int? { schedule.cycles[WidgetSnapshot.dayKey(day)].flatMap(CycleLabel.day(in:)) }
+    /// Room for "Day 4" under each date, in weeks that have cycle days.
+    private var headerHeight: CGFloat { dateHeaderHeight + (days.contains { cycleDay($0) != nil } ? cycleLineHeight : 0) }
     @ScaledMetric(relativeTo: .caption2) private var axisWidth: CGFloat = 34
     private var calendar: Calendar { Calendar(identifier: .gregorian) }
     private func minute(_ date: Date) -> Int {
@@ -53,11 +58,12 @@ struct TimetableWeekView: View {
                                     VStack(spacing: 3) {
                                         Text(day.formatted(.dateTime.weekday(.abbreviated))).font(.caption.weight(.semibold))
                                         Text(day.formatted(.dateTime.day())).font(.caption2).monospacedDigit()
+                                        if let cycle = cycleDay(day) { Text("Day \(cycle)").font(.caption2).monospacedDigit().foregroundStyle(.secondary).lineLimit(1) }
                                     }.frame(width: columnWidth, height: headerHeight)
                                         .foregroundStyle(calendar.isDateInToday(day) ? .teal : .primary)
                                         .contentShape(Rectangle())
                                 }.buttonStyle(.plain)
-                                    .accessibilityLabel("Show " + day.formatted(date: .complete, time: .omitted))
+                                    .accessibilityLabel("Show " + day.formatted(date: .complete, time: .omitted) + (cycleDay(day).map { ", Day \($0)" } ?? ""))
                                     .accessibilityHint("Opens the day agenda")
                             }
                         }

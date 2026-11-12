@@ -112,7 +112,13 @@ enum Demo {
         var items: [JSONValue] = []; var cycles: [String: JSONValue] = [:]
         // Alternate Week A / Week B from a fixed Monday so the fictional fortnight is stable.
         let anchor = calendar.date(from: DateComponents(year: 2026, month: 1, day: 5))!
-        let weekB = (calendar.dateComponents([.weekOfYear], from: anchor, to: start).weekOfYear ?? 0) % 2 != 0
+        let weeks = calendar.dateComponents([.weekOfYear], from: anchor, to: start).weekOfYear ?? 0
+        // A ten-day fortnight (Week A/B); UI tests can ask for another length, such as an eight-day cycle.
+        var cycleLength = 10
+        #if DEBUG
+        if let argument = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix("--demo-cycle-length=") }),
+           let length = Int(argument.dropFirst("--demo-cycle-length=".count)), length > 0 { cycleLength = length }
+        #endif
         let subjects = [("English", "08:40", "09:30", "E2"), ("Mathematics", "09:35", "10:25", "M1"), ("Physics", "10:50", "11:40", "Science 3"), ("Visual Arts", "12:25", "13:15", "Studio 1"), ("Humanities", "13:20", "14:10", "H2")]
         // Fictional teachers, keyed to the demo assessments' class IDs so the assessment header can name them.
         let teachers = ["English": ("Ms Rivera", "rivera@banksia.example", 10), "Mathematics": ("Mr Okafor", "okafor@banksia.example", 11),
@@ -122,7 +128,7 @@ enum Demo {
             let date = formatter.string(from: calendar.date(byAdding: .day, value: offset, to: start)!)
             // An instrumental lesson that overlaps a class, as many schools timetable them.
             if offset == 1 { items.append(.object(["ci": .number(99), "type": .string("class"), "date": .string(date), "description": .string("Piano"), "code": .string("Piano"), "period": .string("Instrumental"), "from": .string("08:30"), "until": .string("09:00"), "room": .string("Music 2"), "staff": .string("Demo tutor")])) }
-            cycles[date] = .array([.string("Day \((weekB ? 5 : 0) + offset + 1)")])
+            cycles[date] = .array([.string("Day \(((weeks * 5 + offset) % cycleLength + cycleLength) % cycleLength + 1)")])
             for (index, subject) in subjects.enumerated() {
                 items.append(.object(["ci": .number(Double(offset * 10 + index)), "type": .string("class"), "date": .string(date), "description": .string(subject.0), "code": .string(subject.0), "period": .string("Period \(index + 1)"), "from": .string(subject.1), "until": .string(subject.2), "room": .string(subject.3), "staff": .string(teachers[subject.0]!.0), "staffEmail": .string(teachers[subject.0]!.1), "metaID": .number(Double(teachers[subject.0]!.2))]))
             }

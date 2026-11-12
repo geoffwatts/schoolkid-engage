@@ -363,7 +363,28 @@ final class ReaderUITests: XCTestCase {
         tab("Timetable", in: app).tap()
         let weekChip = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reminder for' AND label ENDSWITH ': Bring hat'")).firstMatch
         XCTAssertTrue(weekChip.waitForExistence(timeout: 10), "Each day with English shows the reminder in the week view")
+        // Each day's heading names its cycle day.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Show' AND label CONTAINS ', Day '")).firstMatch.exists)
         capture("Timetable week with reminders")
+    }
+
+    /// The week view names each day's place in the cycle: Days 1–5 then 6–10 at a fortnightly school, and a cycle of
+    /// another length (here eight days) running on across weeks without Week A/B.
+    func testWeekHeadingsShowCycleDays() {
+        for (length, name) in [(10, "fortnight"), (8, "eight-day")] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--demo"] + (length == 10 ? [] : ["--demo-cycle-length=\(length)"])
+            app.launch()
+            tab("Timetable", in: app).tap()
+            XCTAssertTrue(app.buttons["Next week"].waitForExistence(timeout: 10))
+            let heading = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Show' AND label CONTAINS ', Day '"))
+            XCTAssertTrue(heading.firstMatch.waitForExistence(timeout: 10))
+            capture("Week view, \(name) cycle, this week")
+            app.buttons["Next week"].tap()
+            XCTAssertTrue(heading.firstMatch.waitForExistence(timeout: 10))
+            capture("Week view, \(name) cycle, next week")
+            app.terminate()
+        }
     }
 
     func testSchoolSignInEntry() {
