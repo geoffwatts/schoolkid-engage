@@ -183,6 +183,7 @@ final class AppModel: ObservableObject {
         snapshot.dayReminders = reminderNotes(for: snapshot.lessons)
         schoolDays = snapshot
         snapshot.save()
+        scheduleReminderAlerts()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -214,16 +215,28 @@ final class AppModel: ObservableObject {
     func openReminder(_ note: ReminderNote) {
         reminderToOpen = note.ruleID ?? reminderRules.first { $0.trimmedNote == note.text }?.id
     }
+    /// The selected child's reminders for each day of a loaded timetable week, for the timetable screen.
+    func reminderNotes(for lessons: [TimetableEntry]) -> [String: [ReminderNote]] {
+        Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) },
+                        kind: LessonKind.key(for:), symbol: LessonKind.symbol(for:))
+    }
     private func reminderNotes(for lessons: [WidgetSnapshot.Lesson]) -> [String: [ReminderNote]] {
         Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) },
                         kind: LessonKind.key(for:), symbol: LessonKind.symbol(for:))
     }
     /// Re-reads the rules into the current snapshot without fetching the timetable again.
+    /// Reschedules the selected child's morning alerts from the current snapshot (never in the demo). The Reminders
+    /// screen calls this when the alert is switched on or its time changes.
+    func scheduleReminderAlerts() {
+        guard !isDemo, let key = reminderKey, let snapshot = schoolDays else { return }
+        Task { await ReminderAlerts.schedule(snapshot.dayReminders ?? [:], childKey: key, childName: snapshot.childName) }
+    }
     private func applyReminders() {
         guard var snapshot = schoolDays else { return }
         snapshot.dayReminders = reminderNotes(for: snapshot.lessons)
         schoolDays = snapshot
         snapshot.save()
+        scheduleReminderAlerts()
         WidgetCenter.shared.reloadAllTimelines()
     }
     /// The selected child's lessons over the past and coming fortnight, for choosing which lessons a reminder follows.
@@ -255,6 +268,8 @@ final class AppModel: ObservableObject {
             await clients[account.id]?.forgetSession(); clients.removeValue(forKey: account.id); accounts = updated
             childrenByAccount.removeValue(forKey: account.id); otherChildrenRequested.remove(account.id)
             clearWidgets()
+            // That account's children's morning alerts go with it.
+            await ReminderAlerts.removeAll(childKeyPrefix: account.id.uuidString + "-")
             UpdateNotifier.shared.forget(except: Set(updated.map(\.id)))
             if accountID == account.id {
                 accountID = updated.first?.id; children = []; childID = nil; selectionVersion = UUID()

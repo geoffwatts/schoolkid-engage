@@ -5,7 +5,12 @@ struct TimetableWeekView: View {
     let schedule: TimetableSchedule
     let days: [Date]
     @Binding var fitWeek: Bool
+    /// Each day's reminders ("yyyy-MM-dd" → notes), shown under that day's heading.
+    var reminders: [String: [ReminderNote]] = [:]
+    var openReminder: (ReminderNote) -> Void = { _ in }
     var selectDay: (Date) -> Void
+    /// The reminders row's height, so the time axis beside it stays level with the lessons.
+    @State private var reminderRowHeight: CGFloat = 0
     @State private var selectedLesson: TimetableEntry?
     /// Points per minute; grows with Dynamic Type so larger text still fits inside each lesson block.
     @ScaledMetric(relativeTo: .caption2) private var fitScale: CGFloat = 0.95
@@ -37,7 +42,7 @@ struct TimetableWeekView: View {
                 let columnWidth = fitWeek ? max(55, (geometry.size.width - axisWidth) / CGFloat(max(1, days.count))) : 145
                 HStack(alignment: .top, spacing: 0) {
                     VStack(spacing: 0) {
-                        Color.clear.frame(height: headerHeight)
+                        Color.clear.frame(height: headerHeight + reminderRowHeight)
                         timeAxis
                     }.frame(width: axisWidth).background(Color(.systemBackground)).zIndex(1)
                     ScrollView(.horizontal) {
@@ -55,6 +60,9 @@ struct TimetableWeekView: View {
                                     .accessibilityLabel("Show " + day.formatted(date: .complete, time: .omitted))
                                     .accessibilityHint("Opens the day agenda")
                             }
+                        }
+                        if days.contains(where: { !(reminders[WidgetSnapshot.dayKey($0)] ?? []).isEmpty }) {
+                            reminderRow(columnWidth: columnWidth)
                         }
                         HStack(alignment: .top, spacing: 0) {
                             ForEach(days, id: \.self) { day in
@@ -94,7 +102,8 @@ struct TimetableWeekView: View {
                     }.frame(width: columnWidth * CGFloat(days.count))
                     }
                 }
-            }.frame(height: timelineHeight + headerHeight + 6)
+            }.frame(height: timelineHeight + headerHeight + reminderRowHeight + 6)
+                .onPreferenceChange(ReminderRowHeight.self) { reminderRowHeight = $0 }
         }.sheet(item: $selectedLesson) { lesson in
             NavigationStack {
                 List {
@@ -113,7 +122,38 @@ struct TimetableWeekView: View {
     }
 }
 
+private struct ReminderRowHeight: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
 private extension TimetableWeekView {
+    /// Each day's reminders under its heading, small enough for a narrow column; tapping one opens its settings.
+    func reminderRow(columnWidth: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(days, id: \.self) { day in
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(reminders[WidgetSnapshot.dayKey(day)] ?? [], id: \.self) { note in
+                        Button { openReminder(note) } label: {
+                            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                                Image(systemName: note.symbol ?? "backpack.fill").foregroundStyle(.primary.opacity(0.7))
+                                Text(note.text).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                            }
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.primary)
+                            .padding(.horizontal, 4).padding(.vertical, 2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(ReminderPalette.color(note.color).opacity(0.3)))
+                        }.buttonStyle(.plain)
+                            .accessibilityLabel("Reminder for \(day.formatted(.dateTime.weekday(.wide))): \(note.text)")
+                            .accessibilityHint("Opens this reminder’s settings")
+                    }
+                }.padding(.horizontal, 2).frame(width: columnWidth, alignment: .topLeading)
+            }
+        }
+        .padding(.bottom, 4)
+        .background(GeometryReader { Color.clear.preference(key: ReminderRowHeight.self, value: $0.size.height) })
+    }
+
     /// A marker for the current time in today's column, matching the day view's live progress.
     var nowLine: some View {
         TimelineView(.periodic(from: .now, by: 60)) { context in

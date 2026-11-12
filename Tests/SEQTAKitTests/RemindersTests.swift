@@ -59,11 +59,26 @@ final class RemindersTests: XCTestCase {
         XCTAssertNil(try JSONDecoder().decode(ReminderNote.self, from: Data(#"{"text":"PE uniform"}"#.utf8)).symbol)
     }
 
+    func testExceptedLessonsKeepAReminderOffTheirDay() {
+        let lessons: [(subject: String, day: String)] = [
+            ("Physical Education", "2026-11-16"), ("Chapel", "2026-11-16"),
+            ("Physical Education", "2026-11-17"),
+            ("Dance", "2026-11-18"), ("Whole School Assembly", "2026-11-18"),
+            ("Music", "2026-11-19")
+        ]
+        let rule = ReminderRule(note: "PE uniform", kinds: ["health"], exceptSubjects: ["assembly", "Chapel"])
+        XCTAssertEqual(Reminders.notes(rules: [rule], lessons: lessons, kind: kind).keys.sorted(), ["2026-11-17"],
+                       "Monday has Chapel and Wednesday an assembly, so only Tuesday keeps the reminder")
+        let byKind = ReminderRule(note: "Gym bag", subjects: ["Physical Education"], exceptKinds: ["arts/music"])
+        XCTAssertEqual(Reminders.notes(rules: [byKind], lessons: lessons + [("Music", "2026-11-17")], kind: kind).keys.sorted(), ["2026-11-16"])
+    }
+
     func testRulesSurviveARoundTrip() throws {
-        let rule = ReminderRule(note: "PE uniform", isEnabled: false, subjects: ["Dance"], kinds: ["health"], color: "green")
+        let rule = ReminderRule(note: "PE uniform", isEnabled: false, subjects: ["Dance"], kinds: ["health"], exceptSubjects: ["Chapel"], color: "green")
         XCTAssertEqual(try JSONDecoder().decode(ReminderRule.self, from: JSONEncoder().encode(rule)), rule)
         // Rules saved before colours existed still load, in the default colour.
         let old = #"{"id":"\#(rule.id.uuidString)","note":"PE uniform","isEnabled":true,"subjects":[],"kinds":["health"]}"#
         XCTAssertNil(try JSONDecoder().decode(ReminderRule.self, from: Data(old.utf8)).color)
+        XCTAssertEqual(try JSONDecoder().decode(ReminderRule.self, from: Data(old.utf8)).exceptSubjects, [])
     }
 }

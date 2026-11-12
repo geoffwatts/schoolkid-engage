@@ -356,6 +356,14 @@ final class ReaderUITests: XCTestCase {
         chip.tap()
         XCTAssertTrue(app.navigationBars["Bring hat"].waitForExistence(timeout: 5), "The reminder's editor opens")
         XCTAssertEqual(app.textFields.firstMatch.value as? String, "Bring hat")
+        // The timetable's week shows it under each day with English.
+        app.buttons["Cancel"].tap()
+        app.navigationBars.matching(NSPredicate(format: "identifier BEGINSWITH 'Reminders for'")).firstMatch.buttons["BackButton"].tap()
+        app.buttons["Done"].tap()
+        tab("Timetable", in: app).tap()
+        let weekChip = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reminder for' AND label ENDSWITH ': Bring hat'")).firstMatch
+        XCTAssertTrue(weekChip.waitForExistence(timeout: 10), "Each day with English shows the reminder in the week view")
+        capture("Timetable week with reminders")
     }
 
     func testSchoolSignInEntry() {

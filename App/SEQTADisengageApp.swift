@@ -77,6 +77,8 @@ struct RootView: View {
             guard url.scheme == "schoolkidengage", url.host == "timetable" else { return }
             showAccounts = false; showSignIn = false; selectedTab = 2; model.timetableOpenRequest = UUID()
         }
+        // A reminder tapped anywhere (the header bar, the timetable) opens Settings on it.
+        .onChange(of: model.reminderToOpen) { _, id in if id != nil { showAccounts = true } }
         .sheet(isPresented: $showAccounts) { AccountsView() }
         .sheet(isPresented: $showSignIn) { SignInView() }
         .sheet(isPresented: $model.reauthenticating) { SignInView(school: model.expiredSchoolURL) }
@@ -165,7 +167,7 @@ struct SchoolToolbar: ViewModifier {
                     // Rolls over to the next school day once today's last lesson ends, as the widget does.
                     TimelineView(.everyMinute) { context in
                         if let reminder = schoolDays.reminderNotes(at: context.date) {
-                            ReminderBar(day: reminder.day, notes: reminder.notes) { note in model.openReminder(note); showAccounts = true }
+                            ReminderBar(day: reminder.day, notes: reminder.notes) { model.openReminder($0) }
                                 .padding(.bottom, 4)
                         }
                     }

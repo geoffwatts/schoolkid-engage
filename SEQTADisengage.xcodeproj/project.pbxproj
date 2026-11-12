@@ -11,6 +11,7 @@
 		2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = F76451FC7B1501854AC8D81A /* SEQTAKit */; };
 		2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */; };
 		31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */; };
+		37F3295EF2B72648982D4601 /* ReminderAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC0AF0465194838FD1D2CB /* ReminderAlerts.swift */; };
 		3BFAA7E18681F74ACED7E697 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 440CD885941208359C8CAE54 /* Assets.xcassets */; };
 		48A48904EA038E84BCBC0CE0 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3371241192234F3AE31781A9 /* WidgetKit.framework */; };
 		4923C886E91806126B0F5ECD /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1AC403E1782F7FCFA656C7C8 /* SEQTAKit */; };
@@ -76,6 +77,7 @@
 /* Begin PBXFileReference section */
 		042AEB883B6F144075B41BFD /* ReaderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderUITests.swift; sourceTree = "<group>"; };
 		05AFBE1D23380793415B6F82 /* TimetableWeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableWeekView.swift; sourceTree = "<group>"; };
+		0CBC0AF0465194838FD1D2CB /* ReminderAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderAlerts.swift; sourceTree = "<group>"; };
 		1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateNotifications.swift; sourceTree = "<group>"; };
 		19449BB5A26A827D000F8CDA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingViews.swift; sourceTree = "<group>"; };
@@ -181,6 +183,7 @@
 				6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */,
 				540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */,
 				1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */,
+				0CBC0AF0465194838FD1D2CB /* ReminderAlerts.swift */,
 				AB1DACC9D72F7E545975AA7C /* RemindersView.swift */,
 				C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */,
 				CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */,
@@ -376,6 +379,7 @@
 				ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */,
 				A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */,
 				F1D6FE4027228931F69546EE /* ReadingViews.swift in Sources */,
+				37F3295EF2B72648982D4601 /* ReminderAlerts.swift in Sources */,
 				2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */,
 				31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */,
 				B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */,

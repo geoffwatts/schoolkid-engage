@@ -19,6 +19,8 @@ struct TimetableView: View {
     private var weekStart: Date { calendar.dateInterval(of: .weekOfYear, for: selectedDate)!.start }
     private var days: [Date] { (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: weekStart) } }
     private var lessons: [TimetableEntry] { schedule?.entries.filter { calendar.isDate($0.start, inSameDayAs: selectedDate) } ?? [] }
+    /// Each day's reminders in the loaded week ("yyyy-MM-dd" → notes), from the selected child's rules.
+    private var dayReminders: [String: [ReminderNote]] { schedule.map { model.reminderNotes(for: $0.entries) } ?? [:] }
     private var requestKey: String { "\(model.childID ?? "")-\(dateKey(weekStart))" }
     var body: some View {
         List {
@@ -59,12 +61,18 @@ struct TimetableView: View {
             if let error { ErrorRow(message: error, retry: load) }
             if model.child == nil { ChildPlaceholder() }
             else if weekView, let schedule {
-                TimetableWeekView(schedule: schedule, days: Array(days.prefix(5)), fitWeek: $fitWeek) { day in selectedDate = day; weekView = false }
+                TimetableWeekView(schedule: schedule, days: Array(days.prefix(5)), fitWeek: $fitWeek, reminders: dayReminders,
+                                  openReminder: { model.openReminder($0) }) { day in selectedDate = day; weekView = false }
                     .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)).listRowSeparator(.hidden)
             }
             else if lessons.isEmpty && !loading && error == nil {
                 ContentUnavailableView("No lessons scheduled", systemImage: "sun.max", description: Text("Choose another day to see the timetable."))
             } else {
+                // The day's reminders head its lessons, as they head the screen.
+                if let notes = dayReminders[WidgetSnapshot.dayKey(selectedDate)], !notes.isEmpty {
+                    ReminderBar(day: nil, notes: notes) { model.openReminder($0) }
+                        .listRowSeparator(.hidden).listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+                }
                 Section {
                     ForEach(lessons) { lesson in
                         TimelineView(.periodic(from: .now, by: 60)) { context in
