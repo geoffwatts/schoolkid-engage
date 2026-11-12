@@ -146,7 +146,7 @@ struct SchoolDayView: View {
     private func lessonList(_ snapshot: WidgetSnapshot, day: Date, rows: Int) -> some View {
         let now = snapshot.current(at: entry.date)
         let next = snapshot.upcoming(after: entry.date, limit: now == nil ? rows : rows - 1)
-        return VStack(alignment: .leading, spacing: 7) {
+        return VStack(alignment: .leading, spacing: 4) {
             ForEach(Array(([now].compactMap { $0 } + next).enumerated()), id: \.offset) { _, lesson in
                 let isNow = lesson.start <= entry.date
                 // The left column already names the day; only say it again for a lesson on a different one.
@@ -156,15 +156,15 @@ struct SchoolDayView: View {
                     Text(isNow ? "Now" : time(lesson.start)).font(.caption.weight(.semibold)).monospacedDigit()
                         .foregroundStyle(isNow ? Color.teal : .primary)
                         .lineLimit(1).fixedSize().frame(minWidth: 46, alignment: .leading)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(lesson.subject).font(.subheadline.weight(.semibold)).lineLimit(1)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(lesson.subject).font(.footnote.weight(.semibold)).lineLimit(1)
                         Text([otherDay, lesson.room.isEmpty ? nil : lesson.room].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                 }
                 // The lesson in progress sits on a soft teal band; every row has the same inset so columns align.
-                .padding(.horizontal, 6).padding(.vertical, 3)
+                .padding(.horizontal, 6).padding(.vertical, 2)
                 .background { if isNow { RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.teal.opacity(0.2)) } }
             }
             if now == nil && next.isEmpty { Text("No lessons coming up").font(.subheadline).foregroundStyle(.secondary) }
