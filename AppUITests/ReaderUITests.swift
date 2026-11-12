@@ -315,6 +315,49 @@ final class ReaderUITests: XCTestCase {
         if app.buttons["Close"].exists { app.buttons["Close"].tap() } else if app.buttons["Cancel"].exists { app.buttons["Cancel"].tap() }
     }
 
+    /// A reminder chip in the header opens that reminder's settings.
+    func testReminderChipOpensItsRule() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo"]
+        app.launch()
+        // Make a reminder for English, which the demo timetable has every school day.
+        XCTAssertTrue(app.buttons["Switch school account"].waitForExistence(timeout: 10))
+        app.buttons["Switch school account"].tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reminders for'")).firstMatch.tap()
+        XCTAssertTrue(app.buttons["Add a reminder"].waitForExistence(timeout: 5))
+        app.buttons["Add a reminder"].tap()
+        let note = app.textFields.firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        note.tap(); note.typeText("Bring hat")
+        app.buttons["Choose lessons"].tap()
+        // Search the picker, then tap the lesson by its exact name (the Updates list behind the sheet has
+        // "English, …" rows too).
+        let search = app.searchFields["Search lessons"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("English")
+        let english = app.buttons["English"]
+        XCTAssertTrue(english.waitForExistence(timeout: 10))
+        english.tap()
+        XCTAssertTrue(english.isSelected, "English is ticked")
+        // The back button hides while searching; close the search first.
+        let pickerBar = app.navigationBars["Choose lessons"], back = pickerBar.buttons["BackButton"]
+        if !back.exists { pickerBar.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}")).firstMatch.tap() }
+        XCTAssertTrue(back.waitForExistence(timeout: 5))
+        back.tap()
+        app.buttons["Save"].tap()
+        // Back from Reminders to Accounts, whose Done closes the sheet.
+        XCTAssertTrue(app.buttons["Add a reminder"].waitForExistence(timeout: 5))
+        app.navigationBars.matching(NSPredicate(format: "identifier BEGINSWITH 'Reminders for'")).firstMatch.buttons["BackButton"].tap()
+        XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+        app.buttons["Done"].tap()
+        // Its chip is in the header; tapping it opens Settings on that reminder's editor.
+        let chip = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Reminder' AND label ENDSWITH 'Bring hat'")).firstMatch
+        XCTAssertTrue(chip.waitForExistence(timeout: 10))
+        chip.tap()
+        XCTAssertTrue(app.navigationBars["Bring hat"].waitForExistence(timeout: 5), "The reminder's editor opens")
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Bring hat")
+    }
+
     func testSchoolSignInEntry() {
         let app = XCUIApplication()
         app.launch()

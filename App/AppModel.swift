@@ -208,6 +208,12 @@ final class AppModel: ObservableObject {
             applyReminders()
         }
     }
+    /// A reminder tapped in the header bar: Settings opens on Reminders, then on this rule's editor.
+    @Published var reminderToOpen: UUID?
+    /// Opens the rule behind a tapped note; notes saved before they recorded their rule are matched by their text.
+    func openReminder(_ note: ReminderNote) {
+        reminderToOpen = note.ruleID ?? reminderRules.first { $0.trimmedNote == note.text }?.id
+    }
     private func reminderNotes(for lessons: [WidgetSnapshot.Lesson]) -> [String: [ReminderNote]] {
         Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) },
                         kind: LessonKind.key(for:), symbol: LessonKind.symbol(for:))

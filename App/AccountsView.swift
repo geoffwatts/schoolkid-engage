@@ -8,8 +8,10 @@ struct AccountsView: View {
     @Environment(\.openURL) private var openURL
     @State private var showSignIn = false
     @State private var removing: SavedAccount?
+    /// "reminders" when Reminders is showing, so a tapped header reminder can open the sheet straight onto it.
+    @State private var path: [String] = []
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section {
                     ForEach(model.accounts) { account in
@@ -42,7 +44,7 @@ struct AccountsView: View {
                 }
                 if let child = model.child {
                     Section {
-                        NavigationLink { RemindersView() } label: {
+                        NavigationLink(value: "reminders") {
                             LabeledContent {
                                 Text("\(model.reminderRules.filter(\.isEnabled).count) on")
                             } label: { Label("Reminders for \(child.name)", systemImage: "backpack.fill") }
@@ -85,6 +87,8 @@ struct AccountsView: View {
                         .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 8)
                 }
             }.listStyle(.insetGrouped).navigationTitle("Accounts")
+                .navigationDestination(for: String.self) { _ in RemindersView() }
+                .onAppear { if model.reminderToOpen != nil { path = ["reminders"] } }
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
                 .sheet(isPresented: $showSignIn, onDismiss: { if model.accountID != nil { dismiss() } }) { SignInView() }
                 .confirmationDialog("Remove this saved account?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {

@@ -106,13 +106,30 @@ struct ReminderBar: View {
     var compact = false
     /// How many lines a compact chip's note may wrap to before it's cut short.
     var compactLines = 1
+    /// When set, each chip is a button that opens its note's rule. Widgets leave it unset: a tap there opens the app.
+    var open: ((ReminderNote) -> Void)? = nil
+    private var label: String {
+        "Reminder\(notes.count == 1 ? "" : "s")\(day.map { " for \($0)" } ?? " for today"): \(notes.map(\.text).joined(separator: ", "))"
+    }
     var body: some View {
-        ChipFlow(spacing: compact ? 4 : 6) {
-            ForEach(Array(notes.enumerated()), id: \.offset) { index, note in chip(note, first: index == 0) }
+        if let open {
+            // Each chip its own button for VoiceOver; the first also says which day they're for.
+            ChipFlow(spacing: compact ? 4 : 6) {
+                ForEach(Array(notes.enumerated()), id: \.offset) { index, note in
+                    Button { open(note) } label: { chip(note, first: index == 0) }.buttonStyle(.plain)
+                        .accessibilityLabel("Reminder\(index == 0 ? day.map { " for \($0)" } ?? " for today" : ""): \(note.text)")
+                        .accessibilityHint("Opens this reminder’s settings")
+                }
+            }
+            .font(compact ? .footnote.weight(.semibold) : .subheadline.weight(.semibold))
+        } else {
+            ChipFlow(spacing: compact ? 4 : 6) {
+                ForEach(Array(notes.enumerated()), id: \.offset) { index, note in chip(note, first: index == 0) }
+            }
+            .font(compact ? .footnote.weight(.semibold) : .subheadline.weight(.semibold))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(label)
         }
-        .font(compact ? .footnote.weight(.semibold) : .subheadline.weight(.semibold))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Reminder\(notes.count == 1 ? "" : "s")\(day.map { " for \($0)" } ?? " for today"): \(notes.map(\.text).joined(separator: ", "))")
     }
     private func chip(_ note: ReminderNote, first: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: compact ? 4 : 6) {

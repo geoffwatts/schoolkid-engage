@@ -66,6 +66,12 @@ struct RemindersView: View {
         .navigationTitle(model.child.map { "Reminders for \($0.name.split(separator: " ").first.map(String.init) ?? $0.name)" } ?? "Reminders")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { if !model.reminderRules.isEmpty { EditButton() } }
+        // Arrived from a reminder tapped in the header: open its editor.
+        .onAppear {
+            guard let id = model.reminderToOpen else { return }
+            model.reminderToOpen = nil
+            editing = model.reminderRules.first { $0.id == id }
+        }
         .sheet(item: $editing) { rule in
             ReminderEditor(rule: rule) { saved in
                 if let index = model.reminderRules.firstIndex(where: { $0.id == saved.id }) { model.reminderRules[index] = saved }

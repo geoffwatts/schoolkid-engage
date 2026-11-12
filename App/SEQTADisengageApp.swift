@@ -9,6 +9,7 @@ struct SEQTADisengageApp: App {
         if ProcessInfo.processInfo.arguments.contains("--demo") {
             // The launch argument is only used by UI tests; start each run from default preferences.
             UserDefaults.standard.removeObject(forKey: "timetableWeekView")
+            UserDefaults.standard.removeObject(forKey: "reminderRules")
             _model = StateObject(wrappedValue: {
             let model = AppModel(); model.startDemo()
             #if DEBUG
@@ -164,7 +165,8 @@ struct SchoolToolbar: ViewModifier {
                     // Rolls over to the next school day once today's last lesson ends, as the widget does.
                     TimelineView(.everyMinute) { context in
                         if let reminder = schoolDays.reminderNotes(at: context.date) {
-                            ReminderBar(day: reminder.day, notes: reminder.notes).padding(.bottom, 4)
+                            ReminderBar(day: reminder.day, notes: reminder.notes) { note in model.openReminder(note); showAccounts = true }
+                                .padding(.bottom, 4)
                         }
                     }
                 }

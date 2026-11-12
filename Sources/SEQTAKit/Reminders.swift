@@ -33,7 +33,11 @@ public struct ReminderNote: Codable, Equatable, Hashable, Sendable {
     /// The SF Symbol of the day's first lesson that set the reminder off, as shown beside that subject elsewhere in
     /// the app; nil when that subject has no icon of its own. Absent in snapshots written before it existed.
     public let symbol: String?
-    public init(text: String, color: String? = nil, symbol: String? = nil) { self.text = text; self.color = color; self.symbol = symbol }
+    /// The rule that produced this note, so tapping it can open that rule. Absent in snapshots written before it existed.
+    public let ruleID: UUID?
+    public init(text: String, color: String? = nil, symbol: String? = nil, ruleID: UUID? = nil) {
+        self.text = text; self.color = color; self.symbol = symbol; self.ruleID = ruleID
+    }
 }
 
 public enum Reminders {
@@ -55,7 +59,7 @@ public enum Reminders {
                     let lessonKind = kinds[subject] ?? kind(subject); kinds[subject] = lessonKind
                     return rule.matches(subject: subject, kind: lessonKind)
                 }), !notes.contains(where: { $0.text == rule.trimmedNote }) else { continue }
-                notes.append(ReminderNote(text: rule.trimmedNote, color: rule.color, symbol: symbol(trigger)))
+                notes.append(ReminderNote(text: rule.trimmedNote, color: rule.color, symbol: symbol(trigger), ruleID: rule.id))
             }
             if !notes.isEmpty { result[day] = notes }
         }

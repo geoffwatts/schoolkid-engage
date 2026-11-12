@@ -44,8 +44,9 @@ final class RemindersTests: XCTestCase {
     func testTheSameNoteFromTwoRulesShowsOnceInTheFirstRulesColour() {
         let rules = [ReminderRule(note: "Take tuba", subjects: ["Music"], color: "blue"), ReminderRule(note: " PE uniform", subjects: ["Dance"]),
                      ReminderRule(note: "PE uniform", kinds: ["health"], color: "red")]
+        // Each note also remembers the rule it came from, so tapping it can open that rule.
         XCTAssertEqual(Reminders.notes(rules: rules, lessons: week, kind: kind)["2026-11-18"],
-                       [ReminderNote(text: "Take tuba", color: "blue"), ReminderNote(text: "PE uniform")])
+                       [ReminderNote(text: "Take tuba", color: "blue", ruleID: rules[0].id), ReminderNote(text: "PE uniform", ruleID: rules[1].id)])
     }
 
     func testANoteTakesTheIconOfTheFirstLessonThatSetItOff() {
