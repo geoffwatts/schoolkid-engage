@@ -118,6 +118,18 @@ struct TimetableWeekView: View {
                     LabeledContent("Time", value: lesson.start.formatted(date: .omitted, time: .shortened) + " – " + lesson.end.formatted(date: .omitted, time: .shortened))
                     if !lesson.room.isEmpty { LabeledContent("Room", value: lesson.room) }
                     if !lesson.teacher.isEmpty { LabeledContent("Teacher", value: lesson.teacher) }
+                    if !lesson.teacherEmail.isEmpty {
+                        // As on an assessment: a link only when something here can send mail (the Simulator, and phones
+                        // without a mail app, can't), so it never promises a dead tap; otherwise the address can be copied.
+                        if let mail = URL(string: "mailto:" + lesson.teacherEmail), UIApplication.shared.canOpenURL(mail) {
+                            LabeledContent("Email") {
+                                Link(lesson.teacherEmail, destination: mail).foregroundStyle(.blue)
+                                    .accessibilityHint("Emails \(lesson.teacher.isEmpty ? "the teacher" : lesson.teacher)")
+                            }
+                        } else {
+                            LabeledContent("Email") { Text(lesson.teacherEmail).textSelection(.enabled) }
+                        }
+                    }
                     if !lesson.period.isEmpty { LabeledContent("Period", value: lesson.period) }
                 }.listStyle(.plain).navigationTitle(lesson.subject).navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { selectedLesson = nil } } }
