@@ -493,7 +493,7 @@ final class ReaderUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts[originalOverview].exists, "The previous assessment's overview must disappear")
         XCTAssertTrue(app.buttons["Show full overview"].exists, "Overview expansion resets for a different assessment")
         XCTAssertFalse(app.buttons["Show less overview"].exists)
-        XCTAssertTrue(app.staticTexts["No files have been released for this assessment."].waitForExistence(timeout: 5))
+        scrollTo("No files have been released for this assessment.", app: app)
         XCTAssertFalse(app.staticTexts["Annotated work photo"].exists, "The previous assessment's attachments must disappear")
         capture("Selected assessment content")
 
