@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1DACC9D72F7E545975AA7C /* RemindersView.swift */; };
 		2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = F76451FC7B1501854AC8D81A /* SEQTAKit */; };
 		2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */; };
 		31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */; };
@@ -91,6 +92,7 @@
 		9D47401B0A8448225E6EF8B5 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
 		9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolDayWidget.swift; sourceTree = "<group>"; };
 		AAE7183E82F345A3FC0AF6CC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AB1DACC9D72F7E545975AA7C /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
 		ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableScrollCapture.swift; sourceTree = "<group>"; };
 		B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentPrinting.swift; sourceTree = "<group>"; };
 		B50F160427D1D042DF7BAA68 /* SEQTADisengage.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SEQTADisengage.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -179,6 +181,7 @@
 				6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */,
 				540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */,
 				1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */,
+				AB1DACC9D72F7E545975AA7C /* RemindersView.swift */,
 				C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */,
 				CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */,
 				ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */,
@@ -373,6 +376,7 @@
 				ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */,
 				A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */,
 				F1D6FE4027228931F69546EE /* ReadingViews.swift in Sources */,
+				2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */,
 				31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */,
 				B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */,
 				60EF6CA4646FD8C0A31AD792 /* TimetableScrollCapture.swift in Sources */,

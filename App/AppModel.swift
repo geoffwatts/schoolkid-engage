@@ -121,7 +121,7 @@ final class AppModel: ObservableObject {
         let today = Date(), date = Self.cycleDateKey(today), key = todayCycleKey(for: date)
         guard key != todayCycleKey, key != todayCycleRequestKey else { return }
         // A different child, account or day: the previous label no longer applies.
-        todayCycleTask?.cancel(); todayCycleParts = nil; todayCycleKey = nil; todayCycleRequestKey = nil
+        todayCycleTask?.cancel(); todayCycleParts = nil; todayCycleKey = nil; todayCycleRequestKey = nil; schoolDays = nil
         guard let child, isDemo || client != nil else { return }
         todayCycleRequestKey = key
         let client = client, isDemo = isDemo
@@ -179,8 +179,56 @@ final class AppModel: ObservableObject {
         let lessons = schedules.flatMap(\.entries).sorted { $0.start < $1.start }
             .map { WidgetSnapshot.Lesson(subject: $0.subject, start: $0.start, end: $0.end, room: $0.room) }
         let cycles = schedules.reduce(into: [String: [String]]()) { result, schedule in result.merge(schedule.cycles) { current, _ in current } }
-        WidgetSnapshot(childName: child.name, generatedAt: Date(), weekLetters: showsWeekLetters, cycles: cycles, lessons: lessons).save()
+        var snapshot = WidgetSnapshot(childName: child.name, generatedAt: Date(), weekLetters: showsWeekLetters, cycles: cycles, lessons: lessons)
+        snapshot.dayReminders = reminderNotes(for: snapshot.lessons)
+        schoolDays = snapshot
+        snapshot.save()
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    // MARK: Reminders
+
+    /// The selected child's next two weeks, as handed to the widgets; the header's reminder bar reads it too.
+    @Published private(set) var schoolDays: WidgetSnapshot?
+    /// Every child's reminder rules, keyed by `reminderKey`. A child seen for the first time gets the example rule.
+    @Published private var allReminderRules: [String: [ReminderRule]] = {
+        guard let data = UserDefaults.standard.data(forKey: "reminderRules") else { return [:] }
+        return (try? JSONDecoder().decode([String: [ReminderRule]].self, from: data)) ?? [:]
+    }()
+    private var reminderKey: String? { childID.map { "\(isDemo ? "demo" : accountID?.uuidString ?? "")-\($0)" } }
+    /// The example everyone starts with, switched off until the reader turns it on.
+    static let exampleReminder = ReminderRule(note: "PE uniform", isEnabled: false, kinds: [LessonKind.sport.key])
+    /// The selected child's reminder rules. Changing them updates the header and the widgets straight away.
+    var reminderRules: [ReminderRule] {
+        get { reminderKey.flatMap { allReminderRules[$0] } ?? [Self.exampleReminder] }
+        set {
+            guard let key = reminderKey else { return }
+            allReminderRules[key] = newValue
+            if let data = try? JSONEncoder().encode(allReminderRules) { UserDefaults.standard.set(data, forKey: "reminderRules") }
+            applyReminders()
+        }
+    }
+    private func reminderNotes(for lessons: [WidgetSnapshot.Lesson]) -> [String: [ReminderNote]] {
+        Reminders.notes(rules: reminderRules, lessons: lessons.map { ($0.subject, WidgetSnapshot.dayKey($0.start)) }, kind: LessonKind.key(for:))
+    }
+    /// Re-reads the rules into the current snapshot without fetching the timetable again.
+    private func applyReminders() {
+        guard var snapshot = schoolDays else { return }
+        snapshot.dayReminders = reminderNotes(for: snapshot.lessons)
+        schoolDays = snapshot
+        snapshot.save()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+    /// The selected child's lessons over the past and coming fortnight, for choosing which lessons a reminder follows.
+    func lessonsAroundToday() async throws -> [TimetableEntry] {
+        guard let child else { return [] }
+        let calendar = Calendar.current, today = Date()
+        let from = calendar.date(byAdding: .day, value: -14, to: today)!, until = calendar.date(byAdding: .day, value: 14, to: today)!
+        if isDemo {
+            return try (-2...2).flatMap { try Demo.timetable(on: today.addingTimeInterval(Double($0) * 7 * 86_400)).entries }
+        }
+        guard let client else { return [] }
+        return try await client.timetable(for: child, from: from, until: until).entries
     }
     /// The widgets must never keep showing a child from an account or demo that's gone.
     private func clearWidgets() { WidgetSnapshot.clear(); WidgetCenter.shared.reloadAllTimelines() }

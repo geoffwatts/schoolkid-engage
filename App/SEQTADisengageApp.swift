@@ -148,6 +148,14 @@ struct SchoolToolbar: ViewModifier {
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityLabel([model.identityHeader, model.todayCycle.map { "Today is \($0)" }].compactMap { $0 }.joined(separator: ". "))
+                if let schoolDays = model.schoolDays {
+                    // Rolls over to the next school day once today's last lesson ends, as the widget does.
+                    TimelineView(.everyMinute) { context in
+                        if let reminder = schoolDays.reminderNotes(at: context.date) {
+                            ReminderBar(day: reminder.day, notes: reminder.notes).padding(.bottom, 4)
+                        }
+                    }
+                }
                 if model.sessionHasExpired {
                     // One clear way back in, rather than an error on every screen.
                     HStack(spacing: 10) {

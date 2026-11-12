@@ -37,6 +37,17 @@ struct AccountsView: View {
                 if let error = model.error {
                     Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
                 }
+                if let child = model.child {
+                    Section {
+                        NavigationLink { RemindersView() } label: {
+                            LabeledContent {
+                                Text("\(model.reminderRules.filter(\.isEnabled).count) on")
+                            } label: { Label("Reminders for \(child.name)", systemImage: "backpack.fill") }
+                        }
+                    } header: { Text("Reminders") } footer: {
+                        Text("Show a note such as “PE uniform” at the top of every screen and on the widget on days with certain lessons.")
+                    }
+                }
                 if !model.accounts.isEmpty {
                     Section {
                         Toggle(isOn: $notifier.isEnabled) {

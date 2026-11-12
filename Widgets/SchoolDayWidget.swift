@@ -78,12 +78,13 @@ struct SchoolDayView: View {
             }
         }
     }
-    /// The day the widget is describing: today while there's a lesson on or still to come today, otherwise the day of
-    /// the next lesson (so after school it reads "Day 4, Thursday" alongside Thursday's lessons, not today's).
-    private func shownDay(_ snapshot: WidgetSnapshot) -> Date {
-        guard snapshot.current(at: entry.date) == nil, let next = snapshot.upcoming(after: entry.date, limit: 1).first,
-              !Calendar.current.isDate(next.start, inSameDayAs: entry.date) else { return entry.date }
-        return next.start
+    private func shownDay(_ snapshot: WidgetSnapshot) -> Date { snapshot.shownDay(at: entry.date) }
+    /// The reader's reminders for the shown day, one chip per line. No day is named: on a widget the reminders are
+    /// always for the day of the lesson beside them, which already says so.
+    /// Reminders matter more than anything else in their column, so each chip wraps to show its whole note and the
+    /// layouts drop the child's name, date and cycle day to make room. `lines: 1` cuts them short, as a last resort.
+    @ViewBuilder private func reminders(_ snapshot: WidgetSnapshot, lines: Int = 3) -> some View {
+        if let reminder = snapshot.reminderNotes(at: entry.date) { ReminderBar(day: nil, notes: reminder.notes, compact: true, compactLines: lines) }
     }
     private func time(_ date: Date) -> String { date.formatted(date: .omitted, time: .shortened) }
     /// "Now" for a lesson in progress, "Next" later today, otherwise the day ("Tomorrow", "Monday").
@@ -100,28 +101,55 @@ struct SchoolDayView: View {
     // MARK: Families
 
     private func small(_ snapshot: WidgetSnapshot) -> some View {
+        // Reminders outrank everything but the lesson itself: when space runs short the room goes first, then the
+        // child's name, then the cycle day. Only then are reminders cut to one line.
+        ViewThatFits(in: .vertical) {
+            smallBody(snapshot, showsRoom: true, showsName: true)
+            smallBody(snapshot, showsRoom: false, showsName: true)
+            smallBody(snapshot, showsRoom: false, showsName: false)
+            smallBody(snapshot, showsRoom: false, showsName: false, showsCycle: false)
+            smallBody(snapshot, showsRoom: false, showsName: false, showsCycle: false, reminderLines: 1)
+        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func smallBody(_ snapshot: WidgetSnapshot, showsRoom: Bool, showsName: Bool, showsCycle: Bool = true,
+                           reminderLines: Int = 2) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            cycle(snapshot, on: shownDay(snapshot), font: .headline)
+            reminders(snapshot, lines: reminderLines)
+            if showsCycle { cycle(snapshot, on: shownDay(snapshot), font: .headline) }
             Spacer(minLength: 0)
             if let lesson = focus(snapshot) {
-                Text(caption(for: lesson).uppercased()).font(.caption2.weight(.semibold)).tracking(1).foregroundStyle(.secondary)
+                // The child's name heads the lesson; "until" or a start time says whether it's on now.
+                if showsName { Text(snapshot.childName).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1) }
                 Text(lesson.subject).font(.headline).lineLimit(2).minimumScaleFactor(0.8)
-                Text(lesson.start <= entry.date ? "until \(time(lesson.end))" : time(lesson.start)).font(.subheadline).monospacedDigit()
-                if !lesson.room.isEmpty { Text(lesson.room).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
+                Text(lessonTime(lesson)).font(.subheadline).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                if showsRoom && !lesson.room.isEmpty { Text(lesson.room).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
             } else {
                 Text("No lessons coming up").font(.subheadline).foregroundStyle(.secondary)
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
+    /// "until 11:50" for a lesson on now, "11:55" later today, "Tomorrow 8:40" or "Monday 8:40" on another day.
+    private func lessonTime(_ lesson: WidgetSnapshot.Lesson) -> String {
+        if lesson.start <= entry.date { return "until \(time(lesson.end))" }
+        if Calendar.current.isDate(lesson.start, inSameDayAs: entry.date) { return time(lesson.start) }
+        return "\(caption(for: lesson)) \(time(lesson.start))"
+    }
 
     private func medium(_ snapshot: WidgetSnapshot) -> some View {
         let day = shownDay(snapshot)
         return HStack(alignment: .top, spacing: 12) {
-            // The child's name is the first thing to go when the text is too big for it.
+            // Reminders head the day column, leaving the lessons their full height, and may fill it: the child's name
+            // goes first, then the date, then the cycle day. Only then are the reminders cut short.
             ViewThatFits(in: .vertical) {
-                dayColumn(snapshot, day: day, showsName: true)
-                dayColumn(snapshot, day: day, showsName: false)
-            }.frame(width: 100, alignment: .leading)
+                dayColumn(snapshot, day: day, showsName: true, showsDate: true)
+                dayColumn(snapshot, day: day, showsName: false, showsDate: true)
+                dayColumn(snapshot, day: day, showsName: false, showsDate: false)
+                dayColumn(snapshot, day: day, showsName: false, showsDate: false, showsCycle: false)
+                dayColumn(snapshot, day: day, showsName: false, showsDate: false, showsCycle: false, reminderLines: 1)
+            }
+            // A little wider on reminder days, so a chip like "PE uniform" fits on one line.
+            .frame(width: snapshot.reminderNotes(at: entry.date) == nil ? 100 : 118, alignment: .leading)
             // As many lessons as fit at the reader's text size: three normally, fewer as the text grows.
             ViewThatFits(in: .vertical) {
                 lessonList(snapshot, day: day, rows: 3)
@@ -131,11 +159,15 @@ struct SchoolDayView: View {
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private func dayColumn(_ snapshot: WidgetSnapshot, day: Date, showsName: Bool) -> some View {
+    private func dayColumn(_ snapshot: WidgetSnapshot, day: Date, showsName: Bool, showsDate: Bool, showsCycle: Bool = true,
+                           reminderLines: Int = 4) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            cycle(snapshot, on: day, font: .title3.weight(.semibold))
-            Text(day.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
-                .lineLimit(2).minimumScaleFactor(0.8)
+            reminders(snapshot, lines: reminderLines)
+            if showsCycle { cycle(snapshot, on: day, font: .title3.weight(.semibold)) }
+            if showsDate {
+                Text(day.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))).font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(2).minimumScaleFactor(0.8)
+            }
             if showsName {
                 Spacer(minLength: 0)
                 Text(snapshot.childName).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
@@ -173,7 +205,13 @@ struct SchoolDayView: View {
 
     private func rectangular(_ snapshot: WidgetSnapshot) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            cycle(snapshot, on: shownDay(snapshot), font: .headline)
+            // Three lines only: a reminder takes the cycle day's place, since it's the thing to act on.
+            if let reminder = snapshot.reminderNotes(at: entry.date) {
+                Label(reminder.notes.map(\.text).joined(separator: " · "), systemImage: "backpack.fill")
+                    .font(.headline).lineLimit(1)
+            } else {
+                cycle(snapshot, on: shownDay(snapshot), font: .headline)
+            }
             if let lesson = focus(snapshot) {
                 Text("\(caption(for: lesson)) \(lesson.subject)").font(.subheadline).lineLimit(1)
                 Text([lesson.start <= entry.date ? "until \(time(lesson.end))" : time(lesson.start), lesson.room].filter { !$0.isEmpty }.joined(separator: " · "))
