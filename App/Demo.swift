@@ -35,8 +35,14 @@ enum Demo {
         [try AcademicReport(json: .object(["uuid": .string("demo-report"), "year": .number(2026), "terms": .string("Semester 1"), "types": .string("Student progress report"), "created_date": .string("26 June 2026")])),
          try AcademicReport(json: .object(["uuid": .string("demo-report-2025"), "year": .number(2025), "terms": .string("Semester 2"), "types": .string("End of year report"), "created_date": .string("5 December 2025")]))]
     }
-    static func assessmentDetails() -> JSONValue {
-        .object([
+    static func assessmentDetails(for assessment: Assessment) -> JSONValue {
+        if assessment.id == "8" {
+            return .object([
+                "description": .string("<p>Use fraction models to explain equivalent fractions and compare their sizes.</p>"),
+                "engagement": .object(["feedbackComment": .string("<p>Your fraction diagrams clearly explain your reasoning.</p>")])
+            ])
+        }
+        return .object([
             "description": .string("<p>Read the task outline and prepare your response for class.</p>"),
             "engagement": .object(["feedbackComment": .string("<p>A thoughtful response with clear examples.</p><table><tr><th>Strength</th><th>Next step</th></tr><tr><td>Clear evidence supports the main idea, with relevant examples explained throughout the response.</td><td>Develop the conclusion by connecting the strongest examples back to your main idea.</td></tr></table>")]),
             "criteria": .array([.object([
@@ -75,8 +81,9 @@ enum Demo {
             ]))
         }
     }
-    static func attachments() throws -> [AssessmentAttachment] {
-        [try AssessmentAttachment(file: .object(["uuid": .string("demo-photo"), "filename": .string("Annotated work photo"), "mimetype": .string("image/png")]), type: "resource"),
+    static func attachments(for assessment: Assessment) throws -> [AssessmentAttachment] {
+        if assessment.id == "8" { return [] }
+        return [try AssessmentAttachment(file: .object(["uuid": .string("demo-photo"), "filename": .string("Annotated work photo"), "mimetype": .string("image/png")]), type: "resource"),
          try AssessmentAttachment(file: .object(["uuid": .string("demo-pdf"), "filename": .string("Marked assessment.pdf"), "mimetype": .string("application/pdf")]), type: "submission"),
          try AssessmentAttachment(file: .object(["uuid": .string("demo-docx"), "filename": .string("Essay feedback.docx"), "mimetype": .string("application/vnd.openxmlformats-officedocument.wordprocessingml.document")]), type: "resource")]
     }

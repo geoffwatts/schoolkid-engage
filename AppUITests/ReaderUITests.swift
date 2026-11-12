@@ -31,10 +31,58 @@ final class ReaderUITests: XCTestCase {
         app.buttons["Day"].tap()
         XCTAssertTrue(app.staticTexts["English"].waitForExistence(timeout: 5))
         capture("Flat timetable")
+    }
+
+    func testReportsKeepSectionNavigationAvailable() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
         tab("Reports", in: app).tap()
+        XCTAssertTrue(app.staticTexts["Student progress report"].waitForExistence(timeout: 5))
         app.staticTexts["Student progress report"].tap()
-        XCTAssertFalse(app.tabBars.firstMatch.exists)
-        capture("Full bleed report")
+        XCTAssertTrue(app.navigationBars["Student progress report"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tab("Timetable", in: app).isHittable, "Section navigation stays available while reading a report")
+        capture("Report with section navigation")
+        tab("Timetable", in: app).tap()
+        XCTAssertTrue(app.buttons["Next week"].waitForExistence(timeout: 5), "Switch sections without closing the report")
+        tab("Reports", in: app).tap()
+        XCTAssertTrue(app.navigationBars["Student progress report"].waitForExistence(timeout: 5), "Switching back keeps the report open")
+    }
+
+    func testCollapsedDetailOffersSystemBackButton() throws {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        XCTAssertTrue(app.staticTexts["Reading journal feedback"].waitForExistence(timeout: 10))
+        app.staticTexts["Reading journal feedback"].tap()
+        XCTAssertTrue(app.buttons["Share assessment"].waitForExistence(timeout: 5))
+        let anotherUpdate = app.staticTexts["Fractions in action results"]
+        if anotherUpdate.exists && anotherUpdate.isHittable { throw XCTSkip("Check Back in a collapsed layout") }
+        let back = systemBackButton(in: app)
+        XCTAssertTrue(back.waitForExistence(timeout: 5), "The system Back button must be available in the side rail or navigation bar")
+        capture("Native assessment Back button")
+        back.tap()
+        XCTAssertTrue(app.staticTexts["Fractions in action results"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Share assessment"].exists)
+        tab("Timetable", in: app).tap()
+        XCTAssertTrue(app.buttons["Next week"].waitForExistence(timeout: 5))
+    }
+
+    func testAttachmentToolbarOffersCloseRotateAndShare() {
+        XCUIDevice.shared.orientation = .portrait
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        app.staticTexts["Reading journal feedback"].tap()
+        let open = app.buttons["Open Annotated work photo full size"]
+        for _ in 0..<12 {
+            if open.exists && open.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(open.isHittable)
+        open.tap()
+        let close = app.buttons["Close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Rotate clockwise"].isHittable)
+        XCTAssertTrue(app.buttons["Share Annotated work photo.png"].isHittable)
+        capture("Native attachment toolbar")
+        close.tap()
+        XCTAssertTrue(app.buttons["Share assessment"].waitForExistence(timeout: 5), "Close returns to the assessment")
     }
 
     func testAttachmentStackJumpsToFiles() throws {
@@ -126,6 +174,17 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["OVERVIEW"].waitForExistence(timeout: 5) || app.staticTexts["Overview"].waitForExistence(timeout: 1), "The detail opens")
         XCTAssertTrue(app.staticTexts["Book talk"].isHittable, "The list stays visible beside the detail")
         capture("iPad assessments")
+    }
+
+    func testSwitchingAssessmentsReplacesDetailContent() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        tab("Assessments", in: app).tap()
+        verifyAssessmentSwitching(in: app, first: "Reading journal", second: "Fractions in action")
+    }
+
+    func testSwitchingUpdatesReplacesAssessmentContent() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        verifyAssessmentSwitching(in: app, first: "Reading journal feedback", second: "Fractions in action results")
     }
 
     func testWidgetLinkOpensTimetable() {
@@ -239,12 +298,12 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Reading journal"].waitForExistence(timeout: 5))
         app.staticTexts["Reading journal"].tap()
         XCTAssertTrue(app.buttons["Share assessment"].waitForExistence(timeout: 5))
-        goBack(in: app)
+        if !filter.exists || !filter.isHittable { goBack(in: app) }
         XCTAssertTrue(filter.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Reading journal"].waitForExistence(timeout: 5))
         XCTAssertTrue(filter.label.contains("English") || (filter.value as? String)?.contains("English") == true)
 
-        app.buttons["Select child: Alex Morgan"].tap()
+        openChildMenu(in: app)
         app.buttons["Sam Morgan"].tap()
         XCTAssertTrue(filter.waitForExistence(timeout: 5))
         XCTAssertTrue(filter.label.contains("All") || (filter.value as? String)?.contains("All") == true)
@@ -269,7 +328,7 @@ final class ReaderUITests: XCTestCase {
         app.buttons["Upcoming"].tap()
         XCTAssertTrue(app.staticTexts["Persuasive writing"].waitForExistence(timeout: 5))
         capture("Assessments")
-        app.buttons["Select child: Alex Morgan"].tap()
+        openChildMenu(in: app)
         app.buttons["Sam Morgan"].tap()
         // Selection resets detail navigation and preserves the active reading tab.
         app.buttons["Upcoming"].tap()
@@ -414,12 +473,52 @@ final class ReaderUITests: XCTestCase {
             XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
         }
     }
+    private func verifyAssessmentSwitching(in app: XCUIApplication, first: String, second: String) {
+        let originalOverview = "Read the task outline and prepare your response for class."
+        let fractionsOverview = "Use fraction models to explain equivalent fractions and compare their sizes."
+        let firstRow = app.staticTexts[first].firstMatch
+        XCTAssertTrue(firstRow.waitForExistence(timeout: 10))
+        firstRow.tap()
+        XCTAssertTrue(app.staticTexts[originalOverview].waitForExistence(timeout: 5))
+        app.buttons["Show full overview"].tap()
+        XCTAssertTrue(app.buttons["Show less overview"].exists)
+
+        // Wide layouts replace the existing detail in place; compact layouts push a fresh screen.
+        let secondRow = app.staticTexts[second].firstMatch
+        if !secondRow.exists || !secondRow.isHittable { goBack(in: app) }
+        XCTAssertTrue(secondRow.isHittable)
+        secondRow.tap()
+        XCTAssertTrue(app.staticTexts[fractionsOverview].waitForExistence(timeout: 5), "The body must belong to the newly selected assessment")
+        XCTAssertTrue(app.staticTexts["Your fraction diagrams clearly explain your reasoning."].exists)
+        XCTAssertFalse(app.staticTexts[originalOverview].exists, "The previous assessment's overview must disappear")
+        XCTAssertTrue(app.buttons["Show full overview"].exists, "Overview expansion resets for a different assessment")
+        XCTAssertFalse(app.buttons["Show less overview"].exists)
+        scrollTo("No files have been released for this assessment.", app: app)
+        XCTAssertFalse(app.staticTexts["Annotated work photo"].exists, "The previous assessment's attachments must disappear")
+        capture("Selected assessment content")
+
+        if !firstRow.exists || !firstRow.isHittable { goBack(in: app) }
+        firstRow.tap()
+        XCTAssertTrue(app.staticTexts[originalOverview].waitForExistence(timeout: 5), "Reselecting the first assessment restores its content")
+        XCTAssertFalse(app.staticTexts[fractionsOverview].exists)
+    }
     /// Back out of a pushed screen: the back button where there is one, otherwise the edge swipe.
     private func goBack(in app: XCUIApplication) {
+        let systemBack = systemBackButton(in: app)
+        if systemBack.exists && systemBack.isHittable { systemBack.tap(); return }
         let back = app.navigationBars.buttons.element(boundBy: 0)
         if back.exists && back.isHittable { back.tap(); return }
         let edge = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
         edge.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)))
+    }
+    private func systemBackButton(in app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "identifier == 'Back' OR identifier == 'BackButton' OR label == 'Back'")).firstMatch
+    }
+    private func openChildMenu(in app: XCUIApplication) {
+        let menu = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Select child'")).firstMatch
+        if !menu.exists || !menu.isHittable { app.buttons["BottomOverflowBarButtonItem"].tap() }
+        XCTAssertTrue(menu.waitForExistence(timeout: 5), "Child selection stays reachable through the system overflow menu")
+        menu.tap()
     }
     /// A tab, whether iOS shows tabs as a bottom bar (iPhone), a top bar (iPad) or a side rail (iPhone Duo).
     private func tab(_ name: String, in app: XCUIApplication) -> XCUIElement {

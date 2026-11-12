@@ -21,7 +21,8 @@ It never submits work or sends messages, and has no server of its own: it talks 
 
 ## Run it
 
-Requires Xcode 26 or later and iOS 17 or later. Open `SEQTADisengage.xcodeproj`, choose the `SEQTADisengage`
+Requires Xcode 27.1 or later and iOS 17 or later. The iOS 27.1 SDK enables Duo's vertical navigation,
+toolbar controls and overflow menu. Open `SEQTADisengage.xcodeproj`, choose the `SEQTADisengage`
 scheme and a simulator, and run. Tap **Explore the demo** to try it with fictional data, no account needed.
 
 To run on a device, set your own team under Signing & Capabilities (and change the bundle and App Group

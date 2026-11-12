@@ -51,21 +51,7 @@ struct RootView: View {
             if model.accountID == nil && !model.isDemo {
                 WelcomeView(showSignIn: $showSignIn)
             } else {
-                TabView(selection: $selectedTab) {
-                    ListDetailNavigation(placeholder: "Select an update", systemImage: "bell") { ActivityView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Updates", systemImage: "bell") }.tag(0)
-                        // Unread updates for this account; nothing shows at zero.
-                        .badge(model.accountID.flatMap { notifier.unviewed[$0] } ?? 0)
-                    ListDetailNavigation(placeholder: "Select an assessment", systemImage: "checklist") { AssessmentsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Assessments", systemImage: "checklist") }.tag(1)
-                    NavigationStack { TimetableView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Timetable", systemImage: "calendar") }.tag(2)
-                    ListDetailNavigation(placeholder: "Select a report", systemImage: "doc.text") { ReportsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Reports", systemImage: "doc.text") }.tag(3)
-                    ListDetailNavigation(placeholder: "Select a notice", systemImage: "newspaper") { NewsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("News", systemImage: "newspaper") }.tag(4)
-                }
-                .id(model.selectionVersion)
+                sections.id(model.selectionVersion)
             }
         }
         .task(id: model.accountID) { await model.loadChildren(); await model.loadOtherAccountsChildren() }
@@ -86,6 +72,43 @@ struct RootView: View {
         .sheet(isPresented: $showAccounts) { AccountsView() }
         .sheet(isPresented: $showSignIn) { SignInView() }
         .sheet(isPresented: $model.reauthenticating) { SignInView(school: model.expiredSchoolURL) }
+    }
+
+    @ViewBuilder private var sections: some View {
+        if #available(iOS 27.0, *) {
+            TabView(selection: $selectedTab) {
+                Tab("Updates", systemImage: "bell", value: 0) { sectionContent(0) }
+                    .badge(model.accountID.flatMap { notifier.unviewed[$0] } ?? 0)
+                Tab("Assessments", systemImage: "checklist", value: 1) { sectionContent(1) }
+                Tab("Timetable", systemImage: "calendar", value: 2) { sectionContent(2) }
+                Tab("Reports", systemImage: "doc.text", value: 3) { sectionContent(3) }
+                Tab("News", systemImage: "newspaper", value: 4) { sectionContent(4) }
+            }.tabViewStyle(.sidebarAdaptable)
+        } else {
+            TabView(selection: $selectedTab) {
+                sectionContent(0).tabItem { Label("Updates", systemImage: "bell") }.tag(0)
+                    .badge(model.accountID.flatMap { notifier.unviewed[$0] } ?? 0)
+                sectionContent(1).tabItem { Label("Assessments", systemImage: "checklist") }.tag(1)
+                sectionContent(2).tabItem { Label("Timetable", systemImage: "calendar") }.tag(2)
+                sectionContent(3).tabItem { Label("Reports", systemImage: "doc.text") }.tag(3)
+                sectionContent(4).tabItem { Label("News", systemImage: "newspaper") }.tag(4)
+            }
+        }
+    }
+
+    @ViewBuilder private func sectionContent(_ section: Int) -> some View {
+        switch section {
+        case 0:
+            ListDetailNavigation(placeholder: "Select an update", systemImage: "bell") { ActivityView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+        case 1:
+            ListDetailNavigation(placeholder: "Select an assessment", systemImage: "checklist") { AssessmentsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+        case 2:
+            NavigationStack { TimetableView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+        case 3:
+            ListDetailNavigation(placeholder: "Select a report", systemImage: "doc.text") { ReportsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+        default:
+            ListDetailNavigation(placeholder: "Select a notice", systemImage: "newspaper") { NewsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+        }
     }
 }
 
@@ -150,7 +173,7 @@ struct SchoolToolbar: ViewModifier {
                         ForEach(schools) { school in
                             if schools.count > 1 { Section(school.name) { rows(for: school) } } else { rows(for: school) }
                         }
-                    } label: { Image(systemName: "person.2") }
+                    } label: { Label("Select child", systemImage: "person.2") }
                     .accessibilityLabel("Select child: \(model.child?.name ?? "None")")
                 }
             }
@@ -201,16 +224,15 @@ struct ListDetailNavigation<List: View>: View {
     let placeholder: String
     let systemImage: String
     @ViewBuilder var list: () -> List
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
     var body: some View {
-        if sizeClass == .regular {
-            NavigationSplitView {
-                list().navigationSplitViewColumnWidth(min: 320, ideal: 380, max: 460)
-            } detail: {
-                ContentUnavailableView(placeholder, systemImage: systemImage)
-            }.navigationSplitViewStyle(.balanced)
-        } else {
-            NavigationStack { list() }
-        }
+        // A single container preserves the selected detail when Duo opens, closes, or resizes.
+        // NavigationSplitView supplies the collapsed stack's Back button and the expanded sidebar toggle.
+        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $preferredCompactColumn) {
+            list().navigationSplitViewColumnWidth(min: 320, ideal: 380, max: 460)
+        } detail: {
+            ContentUnavailableView(placeholder, systemImage: systemImage)
+        }.navigationSplitViewStyle(.balanced)
     }
 }

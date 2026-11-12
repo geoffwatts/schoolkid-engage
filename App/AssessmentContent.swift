@@ -228,20 +228,18 @@ struct AttachmentView: View {
             } else if let error { ContentUnavailableView("Couldn’t open attachment", systemImage: "doc.badge.ellipsis", description: Text(error)) }
             else { ProgressView("Opening attachment…") }
         }.toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
                 if let data {
-                    HStack {
-                        if data.starts(with: Data("%PDF-".utf8)) || UIImage(data: data) != nil {
-                            Button { Task { await rotate() } } label: {
-                                if rotating { ProgressView() } else { Image(systemName: "rotate.right") }
-                            }.disabled(rotating).accessibilityLabel("Rotate clockwise").accessibilityValue("\(quarterTurns * 90) degrees")
-                        }
-                        ShareFileButton(data: data, name: data.starts(with: [0x89, 0x50, 0x4e, 0x47]) ? (attachment.name as NSString).deletingPathExtension + ".png" : attachment.name, mimeType: data.starts(with: Data("%PDF-".utf8)) ? "application/pdf" : data.starts(with: [0x89, 0x50, 0x4e, 0x47]) ? "image/png" : attachment.mimeType)
+                    if data.starts(with: Data("%PDF-".utf8)) || UIImage(data: data) != nil {
+                        Button { Task { await rotate() } } label: {
+                            Label("Rotate clockwise", systemImage: "rotate.right")
+                        }.disabled(rotating).accessibilityLabel("Rotate clockwise").accessibilityValue("\(quarterTurns * 90) degrees")
                     }
+                    ShareFileButton(data: data, name: data.starts(with: [0x89, 0x50, 0x4e, 0x47]) ? (attachment.name as NSString).deletingPathExtension + ".png" : attachment.name, mimeType: data.starts(with: Data("%PDF-".utf8)) ? "application/pdf" : data.starts(with: [0x89, 0x50, 0x4e, 0x47]) ? "image/png" : attachment.mimeType)
                 }
             }
         }.navigationTitle(attachment.name).navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .tabBar).task {
+            .task {
             do {
                 let value: Data?
                 if let initialData { value = initialData }

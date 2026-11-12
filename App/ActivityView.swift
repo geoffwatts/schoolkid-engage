@@ -18,7 +18,10 @@ struct ActivityView: View {
             ForEach(visibleItems) { item in
                 if let assessment = item.assessment,
                    let child = model.children.first(where: { $0.id == item.childID }) ?? (item.childID == nil ? model.child : nil) {
-                    NavigationLink { AssessmentDetailView(assessment: assessment, child: child, releasedAt: item.timestamp) } label: { row(item) }
+                    NavigationLink {
+                        AssessmentDetailView(assessment: assessment, child: child, releasedAt: item.timestamp)
+                            .id(assessment.id)
+                    } label: { row(item) }
                 } else { row(item) }
             }
         }.listStyle(.plain).navigationTitle("Updates")

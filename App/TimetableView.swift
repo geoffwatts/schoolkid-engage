@@ -130,7 +130,7 @@ struct TimetableView: View {
                         .datePickerStyle(.graphical).padding(.horizontal)
                         .onChange(of: selectedDate) { _, _ in choosingWeek = false }
                         .navigationTitle("Choose a week").navigationBarTitleDisplayMode(.inline)
-                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { choosingWeek = false } } }
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { choosingWeek = false } } }
                 }.presentationDetents([.medium, .large])
             }
     }

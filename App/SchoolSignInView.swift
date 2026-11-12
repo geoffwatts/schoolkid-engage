@@ -92,7 +92,7 @@ struct SchoolSignInView: View {
                 }
                 .interactiveDismissDisabled(finishing)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(finishing) }
+                    ToolbarItem(placement: .cancellationAction) { Button("Cancel", systemImage: "xmark") { dismiss() }.disabled(finishing) }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Continue to reader") { Task { await finish(automatic: false) } }.disabled(finishing)
                     }

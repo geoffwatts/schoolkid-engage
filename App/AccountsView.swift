@@ -89,7 +89,7 @@ struct AccountsView: View {
             }.listStyle(.insetGrouped).navigationTitle("Accounts")
                 .navigationDestination(for: String.self) { _ in RemindersView() }
                 .onAppear { if model.reminderToOpen != nil { path = ["reminders"] } }
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { dismiss() } } }
                 .sheet(isPresented: $showSignIn, onDismiss: { if model.accountID != nil { dismiss() } }) { SignInView() }
                 .confirmationDialog("Remove this saved account?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
                     Button("Remove account", role: .destructive) { if let account = removing { Task { await model.remove(account) } }; removing = nil }
@@ -165,7 +165,7 @@ struct SignInView: View {
                     }
                 }
                 .interactiveDismissDisabled(busy)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", systemImage: "xmark") { dismiss() }.disabled(busy) } }
         }
     }
 }
