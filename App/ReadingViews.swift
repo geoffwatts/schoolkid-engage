@@ -100,6 +100,8 @@ struct AssessmentsView: View {
                 ForEach(items) { assessment in
                     NavigationLink {
                         AssessmentDetailView(assessment: assessment, child: child)
+                            // Split layouts reuse the detail column; each assessment needs fresh loaded state.
+                            .id(assessment.id)
                     } label: {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
@@ -291,7 +293,7 @@ struct AssessmentDetailView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { Task { await shareAssessment() } } label: {
-                            if preparingPrint { ProgressView() } else { Image(systemName: "square.and.arrow.up") }
+                            Label(preparingPrint ? "Preparing assessment…" : "Share assessment", systemImage: "square.and.arrow.up")
                         }.accessibilityLabel("Share assessment").disabled(details == nil || preparingPrint)
                     }
                 }
@@ -334,11 +336,11 @@ struct AssessmentDetailView: View {
         defer { loading = false }
         do {
             let value: JSONValue
-            if model.isDemo { value = Demo.assessmentDetails() }
+            if model.isDemo { value = Demo.assessmentDetails(for: assessment) }
             else if let client = model.client { value = try await client.assessmentDetails(assessment, for: child) }
             else { return }
             try Task.checkCancellation(); details = value; loading = false
-            if model.isDemo { attachments = try Demo.attachments() }
+            if model.isDemo { attachments = try Demo.attachments(for: assessment) }
             if !model.isDemo, let client = model.client {
                 loadingAttachments = true; defer { loadingAttachments = false }
                 do {
@@ -408,7 +410,7 @@ struct ReportDetailView: View {
             else if let error { ContentUnavailableView { Label("Couldn’t open report", systemImage: "doc.badge.ellipsis") } description: { Text(error) } actions: { Button("Try again") { Task { await load() } } } }
             else { ProgressView("Opening report…") }
         }.navigationTitle(report.title).navigationBarTitleDisplayMode(.inline)
-            .toolbar(.hidden, for: .tabBar).task { await load() }
+            .task { await load() }
     }
     private func load() async {
         error = nil

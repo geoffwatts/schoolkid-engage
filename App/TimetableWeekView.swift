@@ -120,7 +120,7 @@ struct TimetableWeekView: View {
                     if !lesson.teacher.isEmpty { LabeledContent("Teacher", value: lesson.teacher) }
                     if !lesson.period.isEmpty { LabeledContent("Period", value: lesson.period) }
                 }.listStyle(.plain).navigationTitle(lesson.subject).navigationBarTitleDisplayMode(.inline)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { selectedLesson = nil } } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done", systemImage: "checkmark") { selectedLesson = nil } } }
             }
             .presentationDetents([.medium])
             .presentationDragIndicator(.visible)

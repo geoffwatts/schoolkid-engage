@@ -42,6 +42,7 @@ struct AttachmentCard: View {
                         }.buttonStyle(.borderless).disabled(rotating).accessibilityLabel("Rotate \(attachment.name) clockwise").accessibilityValue("\(quarterTurns * 90) degrees")
                     }
                     ShareFileButton(data: data, name: shareName, mimeType: image != nil && quarterTurns != 0 ? "image/png" : attachment.mimeType)
+                        .labelStyle(.iconOnly)
                 }
             }.padding(.horizontal, 16)
             if let image {
@@ -69,7 +70,7 @@ struct AttachmentCard: View {
             .sheet(isPresented: $fullSize) {
                 NavigationStack {
                     AttachmentView(attachment: attachment, initialData: data)
-                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { fullSize = false } } }
+                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", systemImage: "xmark") { fullSize = false } } }
                 }
             }
     }
@@ -139,7 +140,7 @@ struct ShareFileButton: View {
                 try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
                 export = FileExport(url: url)
             } catch { self.error = error.localizedDescription }
-        } label: { Image(systemName: "square.and.arrow.up") }
+        } label: { Label("Share \(name)", systemImage: "square.and.arrow.up") }
             .buttonStyle(.borderless).accessibilityLabel("Share \(name)")
             .sheet(item: $export, onDismiss: { export = nil }) { file in FileShareSheet(url: file.url) }
             .alert("Couldn’t prepare file", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) { Button("OK") { error = nil } } message: { Text(error ?? "") }
