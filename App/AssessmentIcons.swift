@@ -53,7 +53,8 @@ struct SubjectIdentity: Sendable {
             if movementText.range(of: "(?:\\b(?:dance|dancing)\\b|(?:^|[^a-z])dan(?:$|[^a-z]))", options: .regularExpression) != nil {
                 return .init(family: .health, specialism: "dance")
             }
-            if movementText.range(of: "\\b(?:physical education|health|sports?|fitness|movement|exercise)\\b|(?:^|[^a-z])(?:hpe|pe)(?:$|[^a-z])", options: .regularExpression) != nil {
+            // Outdoor education ("Bush Skills", "Outdoor Ed") sits with PE: it's active, outside, and needs the kit.
+            if movementText.range(of: "\\b(?:physical education|health|sports?|fitness|movement|exercise|outdoor|bush)\\b|(?:^|[^a-z])(?:hpe|pe)(?:$|[^a-z])", options: .regularExpression) != nil {
                 return .init(family: .health, specialism: "general")
             }
             // Humanities names can include "social sciences"; match them before generic science.
@@ -66,7 +67,7 @@ struct SubjectIdentity: Sendable {
             if t.contains("chem") { return .init(family: .science, specialism: "chemistry") }
             if t.contains("biolog") || t.range(of: "\\bbio\\b", options: .regularExpression) != nil { return .init(family: .science, specialism: "biology") }
             if t.contains("earth") { return .init(family: .science, specialism: "earth") }
-            if t.contains("scien") { return .init(family: .science, specialism: "general") }
+            if t.contains("scien") || t.range(of: "\\bstem\\b", options: .regularExpression) != nil { return .init(family: .science, specialism: "general") }
             if t.contains("statistic") { return .init(family: .mathematics, specialism: "statistics") }
             if t.contains("math") || t.contains("algebra") || t.contains("numeracy") { return .init(family: .mathematics, specialism: "general") }
             if t.contains("music") { return .init(family: .arts, specialism: "music") }
