@@ -58,38 +58,13 @@ struct GradingView: View {
     private var hasGrades: Bool { criteria.contains { $0["results"]["grade"].string != nil } }
     private var hasScores: Bool { criteria.contains { $0["results"]["score"].string != nil } }
     private var hasPercentages: Bool { criteria.contains { $0["results"]["percentage"].string != nil } }
+    @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            TableScroll {
-                Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 12) {
-                    GridRow {
-                        Text("Criterion").readingStyle(.meta)
-                        if hasGrades { Text("Grade").readingStyle(.meta) }
-                        if hasScores {
-                            Text("Score").readingStyle(.meta).gridColumnAlignment(.trailing)
-                            Text("Out of").readingStyle(.meta).gridColumnAlignment(.trailing)
-                        }
-                        if hasPercentages { Text("%").readingStyle(.meta).gridColumnAlignment(.trailing) }
-                        if !hasGrades && !hasScores && !hasPercentages { Text("Result").readingStyle(.meta) }
-                    }
-                    Divider().gridCellUnsizedAxes(.horizontal)
-                    ForEach(Array(criteria.enumerated()), id: \.offset) { _, criterion in
-                        GridRow {
-                            // The criterion is the row's heading, so it takes the accent colour like the marks.
-                            Text(criterion["label"].string ?? "Criterion").foregroundStyle(.tint).frame(maxWidth: 280, alignment: .leading)
-                            if hasGrades { Text(criterion["results"]["grade"].string ?? "—").bold().foregroundStyle(.teal) }
-                            if hasScores {
-                                Text(ScorePresentation.format(criterion["results"]["score"].string ?? "—")).monospacedDigit()
-                                Text(ScorePresentation.format(criterion["results"]["target"].string ?? criterion["target"].string ?? "—")).monospacedDigit()
-                            }
-                            if hasPercentages {
-                                Text(criterion["results"]["percentage"].string.map { ScorePresentation.format($0) + "%" } ?? "—").monospacedDigit()
-                            }
-                            if !hasGrades && !hasScores && !hasPercentages { Text("Not released").foregroundStyle(.secondary) }
-                        }
-                    }
-                }.padding(.vertical, 4)
-            }.accessibilityLabel("SEQTA grades")
+            // A table fitted to the page, long criteria wrapping; at accessibility text sizes the columns can't fit,
+            // so each criterion gets its own line with its marks beneath.
+            Group { if typeSize.isAccessibilitySize { stackedMarks } else { marksTable } }
+                .accessibilityLabel("SEQTA grades")
             ForEach(Array(criteria.enumerated()), id: \.offset) { _, criterion in
                 if let lines = criterion["rubric"]["lines"].array, !lines.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
@@ -124,6 +99,61 @@ struct GradingView: View {
                 }
             }
         }
+    }
+
+    private func grade(_ c: JSONValue) -> String? { c["results"]["grade"].string }
+    private func score(_ c: JSONValue) -> String { ScorePresentation.format(c["results"]["score"].string ?? "—") }
+    private func target(_ c: JSONValue) -> String { ScorePresentation.format(c["results"]["target"].string ?? c["target"].string ?? "—") }
+    private func percentage(_ c: JSONValue) -> String { c["results"]["percentage"].string.map { ScorePresentation.format($0) + "%" } ?? "—" }
+
+    private var stackedMarks: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Array(criteria.enumerated()), id: \.offset) { _, criterion in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(criterion["label"].string ?? "Criterion").foregroundStyle(.tint)
+                        .fixedSize(horizontal: false, vertical: true)
+                    let marks = [hasGrades ? grade(criterion) ?? "—" : nil, hasScores ? "\(score(criterion)) / \(target(criterion))" : nil,
+                                 hasPercentages ? percentage(criterion) : nil].compactMap { $0 }
+                    if marks.isEmpty { Text("Not released").foregroundStyle(.secondary) }
+                    else { Text(marks.joined(separator: " · ")).monospacedDigit() }
+                }.accessibilityElement(children: .combine)
+            }
+        }.padding(.vertical, 4)
+    }
+
+    private var marksTable: some View {
+        // Marks sit level with the first line of a criterion that wraps.
+        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 18, verticalSpacing: 12) {
+            GridRow {
+                Text("Criterion").readingStyle(.meta)
+                if hasGrades { Text("Grade").readingStyle(.meta).lineLimit(1).fixedSize() }
+                if hasScores {
+                    Text("Score").readingStyle(.meta).lineLimit(1).fixedSize().gridColumnAlignment(.trailing)
+                    Text("Out of").readingStyle(.meta).lineLimit(1).fixedSize().gridColumnAlignment(.trailing)
+                }
+                if hasPercentages { Text("%").readingStyle(.meta).lineLimit(1).fixedSize().gridColumnAlignment(.trailing) }
+                if !hasGrades && !hasScores && !hasPercentages { Text("Result").readingStyle(.meta) }
+            }
+            Divider().gridCellUnsizedAxes(.horizontal)
+            ForEach(Array(criteria.enumerated()), id: \.offset) { _, criterion in
+                GridRow {
+                    // The criterion is the row's heading, so it takes the accent colour like the marks. It takes the
+                    // width the marks leave and wraps, so the table always fits the page.
+                    Text(criterion["label"].string ?? "Criterion").foregroundStyle(.tint)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if hasGrades { Text(criterion["results"]["grade"].string ?? "—").bold().foregroundStyle(.teal).lineLimit(1).fixedSize() }
+                    if hasScores {
+                        Text(ScorePresentation.format(criterion["results"]["score"].string ?? "—")).monospacedDigit().lineLimit(1).fixedSize()
+                        Text(ScorePresentation.format(criterion["results"]["target"].string ?? criterion["target"].string ?? "—")).monospacedDigit().lineLimit(1).fixedSize()
+                    }
+                    if hasPercentages {
+                        Text(criterion["results"]["percentage"].string.map { ScorePresentation.format($0) + "%" } ?? "—").monospacedDigit().lineLimit(1).fixedSize()
+                    }
+                    if !hasGrades && !hasScores && !hasPercentages { Text("Not released").foregroundStyle(.secondary) }
+                }
+            }
+        }.padding(.vertical, 4)
     }
 }
 
