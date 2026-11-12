@@ -298,6 +298,12 @@ struct AssessmentDetailView: View {
         }
                 .navigationTitle("Assessment").navigationBarTitleDisplayMode(.inline).task { await load() }
     }
+    /// The header's date, worded for print: "Due …" when the due date is known, else when the result was released.
+    private var printedDate: String? {
+        if let due = [assessment.due, listedDue ?? ""].first(where: { !$0.isEmpty }) { return "Due " + reportDate(due) }
+        if let releasedAt, !releasedAt.isEmpty { return "Released " + reportDate(releasedAt) }
+        return nil
+    }
     private func shareAssessment() async {
         guard let details else { return }
         preparingPrint = true; defer { preparingPrint = false }
@@ -308,7 +314,9 @@ struct AssessmentDetailView: View {
                 else if model.isDemo { media.append((attachment, Demo.mediaData(attachment))) }
                 else if let client = model.client { media.append((attachment, try await client.attachmentData(attachment))) }
             }
-            try AssessmentPrinting.present(assessment: assessment, details: details, media: media)
+            let item = PrintableAssessment(assessment: assessment, details: details, media: media, date: printedDate,
+                                           teacher: model.teacher(forClass: assessment.metaclass, child: child)?.name, student: child.name)
+            try AssessmentPrinting.present([item], jobName: assessment.displayTitle)
         } catch { self.error = error.localizedDescription }
     }
     /// `assessment/get` carries no dates, so an assessment opened from an update finds its due date in the (cached) lists.

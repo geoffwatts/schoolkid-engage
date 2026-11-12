@@ -242,6 +242,30 @@ final class SEQTAKitTests: XCTestCase {
         XCTAssertEqual(feed[1].id, "untyped:2026-11-09T12:00:00:Semester report available")
     }
 
+    func testOverallResultPrefersSEQTAThenWorksItOutFromCriteria() throws {
+        let bare = try Assessment(json: .object(["id": .string("1"), "title": .string("Test")]))
+        func criterion(_ grade: String?, _ score: Double?, _ target: Double?) -> JSONValue {
+            var results: [String: JSONValue] = [:]
+            if let grade { results["grade"] = .string(grade) }
+            if let score { results["score"] = .number(score) }
+            if let target { results["target"] = .number(target) }
+            return .object(["results": .object(results)])
+        }
+        // The assessment's own result wins.
+        let own = JSONValue.object(["results": .object(["grade": .string("B"), "percentage": .number(72)]), "criteria": .array([criterion("A", 9, 10)])])
+        XCTAssertEqual(AssessmentResult.overall(assessment: bare, details: own), AssessmentResult(grade: "B", percentage: "72"))
+        // One criterion is the result, with the percentage worked out.
+        let one = AssessmentResult.overall(assessment: bare, details: .object(["criteria": .array([criterion("A", 48, 50)])]))
+        XCTAssertEqual(one?.grade, "A"); XCTAssertEqual(one?.displayScore, "48 / 50"); XCTAssertEqual(one?.displayPercentage, "96%")
+        // Several add up; differing grades give no overall grade.
+        let two = AssessmentResult.overall(assessment: bare, details: .object(["criteria": .array([criterion("A", 48, 50), criterion("B", 9, 10)])]))
+        XCTAssertNil(two?.grade); XCTAssertEqual(two?.displayScore, "57 / 60"); XCTAssertEqual(two?.displayPercentage, "95%")
+        // Partly marked: no total that would mislead.
+        XCTAssertNil(AssessmentResult.overall(assessment: bare, details: .object(["criteria": .array([criterion("A", 48, 50), criterion(nil, nil, 10)])])))
+        // Nothing released.
+        XCTAssertNil(AssessmentResult.overall(assessment: bare, details: .object(["criteria": .array([criterion(nil, nil, 20)])])))
+    }
+
     private func bell(_ id: Int, _ timestamp: String) throws -> ActivityItem {
         try ActivityItem(json: .object(["notificationID": .number(Double(id)), "type": .string("coneqtassessments"), "timestamp": .string(timestamp),
                                         "coneqtAssessments": .object(["title": .string("Item \(id)")])]))
