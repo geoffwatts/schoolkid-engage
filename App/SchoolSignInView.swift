@@ -1,8 +1,10 @@
 import SwiftUI
 import WebKit
-import SEQTAKit
+import LMSKit
 
-/// One fresh in-memory browser per login attempt. Password fields stay in the school's / identity provider's page.
+/// One browser per login attempt, using the account's own website data store. Password fields stay in the school's /
+/// identity provider's page. The store keeps the identity provider's sign-in for this account alone (no other account
+/// or Safari shares it), so a linked lunch-order portal can sign in through it; it's deleted with the account.
 @MainActor
 final class SchoolLoginBrowser: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate, WKHTTPCookieStoreObserver {
     let webView: WKWebView
@@ -11,9 +13,12 @@ final class SchoolLoginBrowser: NSObject, ObservableObject, WKNavigationDelegate
     @Published var host: String
     @Published var loading = true
     @Published var error: String?
-    init(school: School) {
+    /// The website data store this browser signs in with, which becomes the account's.
+    let storeID: UUID
+    init(school: School, storeID: UUID) {
+        self.storeID = storeID
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .nonPersistent()
+        config.websiteDataStore = WKWebsiteDataStore(forIdentifier: storeID)
         webView = WKWebView(frame: .zero, configuration: config)
         host = school.url.host ?? ""
         schoolHost = school.url.host ?? ""
@@ -68,9 +73,11 @@ struct SchoolSignInView: View {
     @StateObject private var browser: SchoolLoginBrowser
     @State private var finishing = false
     @State private var error: String?
-    init(school: School, connected: @escaping () -> Void) {
+    /// `storeID` is the website data store this sign-in uses: the account's own when signing in again, otherwise a new
+    /// one. It's read back from the browser, since a re-rendered parent may pass a different new ID.
+    init(school: School, storeID: UUID = UUID(), connected: @escaping () -> Void) {
         self.school = school; self.connected = connected
-        _browser = StateObject(wrappedValue: SchoolLoginBrowser(school: school))
+        _browser = StateObject(wrappedValue: SchoolLoginBrowser(school: school, storeID: storeID))
     }
     var body: some View {
         NavigationStack {
@@ -91,6 +98,10 @@ struct SchoolSignInView: View {
                     if browser.webView.url?.host == school.url.host { await finish(automatic: true) }
                 }
                 .interactiveDismissDisabled(finishing)
+                // While signing in, the store is in use; afterwards, one left by a sign-in that didn't finish holds
+                // nobody's account, so it's cleared out.
+                .onAppear { model.webStoresInUse.insert(browser.storeID) }
+                .onDisappear { model.webStoresInUse.remove(browser.storeID); model.removeUnusedWebStores() }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(finishing) }
                     ToolbarItem(placement: .confirmationAction) {
@@ -107,7 +118,7 @@ struct SchoolSignInView: View {
         do {
             guard let session = await browser.sessionID(for: school) else { throw SEQTAError.authenticationRequired }
             try Task.checkCancellation()
-            try await model.connect(school: school, sessionID: session)
+            try await model.connect(school: school, sessionID: session, webStoreID: browser.storeID)
             dismiss(); connected()
         } catch {
             if !automatic { self.error = "Complete your school’s sign-in first, then continue to the reader. \(error.localizedDescription)" }

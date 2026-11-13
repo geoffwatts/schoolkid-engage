@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03DF96DD26E69C172125B87D /* SchoolDayWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A176E0DAB8B68FBB8798D7B /* SchoolDayWidgetView.swift */; };
 		2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1DACC9D72F7E545975AA7C /* RemindersView.swift */; };
-		2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = F76451FC7B1501854AC8D81A /* SEQTAKit */; };
+		2DDD7B6DEB722D75BECF2002 /* LMSKit in Frameworks */ = {isa = PBXBuildFile; productRef = A88E6EB81267BCBD1F288802 /* LMSKit */; };
 		2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */; };
 		31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6F3453C418DF73DBE08F07 /* SEQTADisengageApp.swift */; };
 		37F3295EF2B72648982D4601 /* ReminderAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CBC0AF0465194838FD1D2CB /* ReminderAlerts.swift */; };
 		3BFAA7E18681F74ACED7E697 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 440CD885941208359C8CAE54 /* Assets.xcassets */; };
 		48A48904EA038E84BCBC0CE0 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3371241192234F3AE31781A9 /* WidgetKit.framework */; };
-		4923C886E91806126B0F5ECD /* SEQTAKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1AC403E1782F7FCFA656C7C8 /* SEQTAKit */; };
+		4923C886E91806126B0F5ECD /* LMSKit in Frameworks */ = {isa = PBXBuildFile; productRef = 33A8F0CAD30E3835A321C2C3 /* LMSKit */; };
 		53439F35F6EFC8B431CA6826 /* AssessmentIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBF6AF4F91E72C660015C20 /* AssessmentIcons.swift */; };
 		60EF6CA4646FD8C0A31AD792 /* TimetableScrollCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */; };
 		621C519A4E86E62A33C4FE77 /* TimetableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CDE8C0B7B3D62038238699B /* TimetableView.swift */; };
@@ -25,10 +26,14 @@
 		71CC9CAA162F74499BD728FE /* NetworkActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */; };
 		7FABDE0655D7D9E20E4DD07C /* AssessmentContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6592B693485BD64B81F92417 /* AssessmentContent.swift */; };
 		8ABF7394DDDBA55BE2B4F0DC /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D47401B0A8448225E6EF8B5 /* AccountsView.swift */; };
+		8F32A8100268BE012BAF53CA /* LunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7860A9DFFF18ED7226DE57 /* LunchView.swift */; };
+		92814506B0FDA4D9083C639C /* LunchDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8144309535DB6C146EEB372 /* LunchDemo.swift */; };
 		94F9B4F5E715028EED475A44 /* AttachmentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36303393E648FE9F02F49702 /* AttachmentCard.swift */; };
 		9A9753B8F6F7FA92875F9B2C /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89589FA7645D9306AF4E8972 /* AppModel.swift */; };
 		A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */; };
+		AE5A9E5C284F3C50BFD3DA87 /* CanteenKit in Frameworks */ = {isa = PBXBuildFile; productRef = A051055588EBB505B67537D9 /* CanteenKit */; };
 		B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C631358DDBBB6A947DCA18B7 /* SchoolSignInView.swift */; };
+		B6929E62BF839C63C5C78002 /* CanteenFormHints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99ADDC303B7B85B841F50A14 /* CanteenFormHints.swift */; };
 		B92C1F7725E7575F640D8CEF /* UpdateNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */; };
 		BDA8741965720E279448B954 /* AssessmentPrinting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */; };
 		C9CF98498E193C31D482435F /* TimetableWeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05AFBE1D23380793415B6F82 /* TimetableWeekView.swift */; };
@@ -36,11 +41,14 @@
 		E1F31FF324747F21AE6A8E20 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBDDE75BFB70C2036EDC5B1E /* ActivityView.swift */; };
 		E3D1B7384A99EBEDB559BC56 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */; };
 		E60D3E26B25469BFF78C9E0B /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 19449BB5A26A827D000F8CDA /* SwiftUI.framework */; };
+		E695E3CA1E5FEFBA6D6C7D06 /* AppModel+Lunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C335806A8134483E3BDB4EC /* AppModel+Lunch.swift */; };
 		E79972E1D584676D496FBF9C /* SchoolDayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */; };
+		E99C0FFE24C49474A153EE9D /* CanteenWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E9A712B8017345AE7A9C21 /* CanteenWeb.swift */; };
 		EAD8C9F959B7E3D2F4D5E999 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */; };
 		ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */; };
 		EE928B077002DDB562CFE5DE /* ReaderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042AEB883B6F144075B41BFD /* ReaderUITests.swift */; };
 		F1D6FE4027228931F69546EE /* ReadingViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */; };
+		FE1EEFFE47C537378271ED12 /* SchoolDayWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A176E0DAB8B68FBB8798D7B /* SchoolDayWidgetView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,18 +89,24 @@
 		1150F965FB570E7AA6D7E97D /* UpdateNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateNotifications.swift; sourceTree = "<group>"; };
 		19449BB5A26A827D000F8CDA /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		1C7BD21D88BEAD5A1F0237AC /* ReadingViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingViews.swift; sourceTree = "<group>"; };
+		1E7860A9DFFF18ED7226DE57 /* LunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LunchView.swift; sourceTree = "<group>"; };
 		3371241192234F3AE31781A9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		36303393E648FE9F02F49702 /* AttachmentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentCard.swift; sourceTree = "<group>"; };
 		3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentRotation.swift; sourceTree = "<group>"; };
 		440CD885941208359C8CAE54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		540DBFC183789CCA1CA07D8F /* ReadingDividers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDividers.swift; sourceTree = "<group>"; };
 		5CDE8C0B7B3D62038238699B /* TimetableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableView.swift; sourceTree = "<group>"; };
+		61E9A712B8017345AE7A9C21 /* CanteenWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanteenWeb.swift; sourceTree = "<group>"; };
 		6592B693485BD64B81F92417 /* AssessmentContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssessmentContent.swift; sourceTree = "<group>"; };
 		68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SchoolkidWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		7A176E0DAB8B68FBB8798D7B /* SchoolDayWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolDayWidgetView.swift; sourceTree = "<group>"; };
+		7C335806A8134483E3BDB4EC /* AppModel+Lunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Lunch.swift"; sourceTree = "<group>"; };
 		89589FA7645D9306AF4E8972 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		99ADDC303B7B85B841F50A14 /* CanteenFormHints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanteenFormHints.swift; sourceTree = "<group>"; };
 		9D47401B0A8448225E6EF8B5 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
 		9FD188A4D048A0BCB6BA73D8 /* SchoolDayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchoolDayWidget.swift; sourceTree = "<group>"; };
+		A8144309535DB6C146EEB372 /* LunchDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LunchDemo.swift; sourceTree = "<group>"; };
 		AAE7183E82F345A3FC0AF6CC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AB1DACC9D72F7E545975AA7C /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
 		ADFA66E4D0DA52DA2A07C298 /* TimetableScrollCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableScrollCapture.swift; sourceTree = "<group>"; };
@@ -117,7 +131,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DDD7B6DEB722D75BECF2002 /* SEQTAKit in Frameworks */,
+				2DDD7B6DEB722D75BECF2002 /* LMSKit in Frameworks */,
 				48A48904EA038E84BCBC0CE0 /* WidgetKit.framework in Frameworks */,
 				E60D3E26B25469BFF78C9E0B /* SwiftUI.framework in Frameworks */,
 			);
@@ -127,7 +141,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4923C886E91806126B0F5ECD /* SEQTAKit in Frameworks */,
+				4923C886E91806126B0F5ECD /* LMSKit in Frameworks */,
+				AE5A9E5C284F3C50BFD3DA87 /* CanteenKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +173,7 @@
 		6064359EE493EBE3944CDF0A /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				7A176E0DAB8B68FBB8798D7B /* SchoolDayWidgetView.swift */,
 				EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */,
 			);
 			path = Shared;
@@ -170,14 +186,19 @@
 				BBDDE75BFB70C2036EDC5B1E /* ActivityView.swift */,
 				C962649151E2A8F784D2EF7B /* AppIcon.icon */,
 				89589FA7645D9306AF4E8972 /* AppModel.swift */,
+				7C335806A8134483E3BDB4EC /* AppModel+Lunch.swift */,
 				6592B693485BD64B81F92417 /* AssessmentContent.swift */,
 				CEBF6AF4F91E72C660015C20 /* AssessmentIcons.swift */,
 				B0E7128C9752DB62A0A5BF0E /* AssessmentPrinting.swift */,
 				440CD885941208359C8CAE54 /* Assets.xcassets */,
 				36303393E648FE9F02F49702 /* AttachmentCard.swift */,
 				3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */,
+				99ADDC303B7B85B841F50A14 /* CanteenFormHints.swift */,
+				61E9A712B8017345AE7A9C21 /* CanteenWeb.swift */,
 				D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */,
 				BBD124747A4D0180F0449FFF /* Demo.swift */,
+				A8144309535DB6C146EEB372 /* LunchDemo.swift */,
+				1E7860A9DFFF18ED7226DE57 /* LunchView.swift */,
 				CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */,
 				D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */,
 				6B301BC259EC119F307139FA /* PrivacyInfo.xcprivacy */,
@@ -247,7 +268,7 @@
 			);
 			name = SchoolkidWidgets;
 			packageProductDependencies = (
-				F76451FC7B1501854AC8D81A /* SEQTAKit */,
+				A88E6EB81267BCBD1F288802 /* LMSKit */,
 			);
 			productName = SchoolkidWidgets;
 			productReference = 68F75B70934ABD528F93E160 /* SchoolkidWidgets.appex */;
@@ -287,7 +308,8 @@
 			);
 			name = SEQTADisengage;
 			packageProductDependencies = (
-				1AC403E1782F7FCFA656C7C8 /* SEQTAKit */,
+				33A8F0CAD30E3835A321C2C3 /* LMSKit */,
+				A051055588EBB505B67537D9 /* CanteenKit */,
 			);
 			productName = SEQTADisengage;
 			productReference = B50F160427D1D042DF7BAA68 /* SEQTADisengage.app */;
@@ -367,14 +389,19 @@
 			files = (
 				8ABF7394DDDBA55BE2B4F0DC /* AccountsView.swift in Sources */,
 				E1F31FF324747F21AE6A8E20 /* ActivityView.swift in Sources */,
+				E695E3CA1E5FEFBA6D6C7D06 /* AppModel+Lunch.swift in Sources */,
 				9A9753B8F6F7FA92875F9B2C /* AppModel.swift in Sources */,
 				7FABDE0655D7D9E20E4DD07C /* AssessmentContent.swift in Sources */,
 				53439F35F6EFC8B431CA6826 /* AssessmentIcons.swift in Sources */,
 				BDA8741965720E279448B954 /* AssessmentPrinting.swift in Sources */,
 				94F9B4F5E715028EED475A44 /* AttachmentCard.swift in Sources */,
 				2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */,
+				B6929E62BF839C63C5C78002 /* CanteenFormHints.swift in Sources */,
+				E99C0FFE24C49474A153EE9D /* CanteenWeb.swift in Sources */,
 				6DF85DA3A248AB6618532626 /* DebugDiagnostics.swift in Sources */,
 				64B4F22492B5D9D40BC2B9AD /* Demo.swift in Sources */,
+				92814506B0FDA4D9083C639C /* LunchDemo.swift in Sources */,
+				8F32A8100268BE012BAF53CA /* LunchView.swift in Sources */,
 				71CC9CAA162F74499BD728FE /* NetworkActivity.swift in Sources */,
 				ECDCE5E02E93E0939CC277AC /* OfficeDocumentPreview.swift in Sources */,
 				A7E92107A8B35327432C15AB /* ReadingDividers.swift in Sources */,
@@ -382,6 +409,7 @@
 				37F3295EF2B72648982D4601 /* ReminderAlerts.swift in Sources */,
 				2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */,
 				31F3DC8201A4F78ADE0CF350 /* SEQTADisengageApp.swift in Sources */,
+				FE1EEFFE47C537378271ED12 /* SchoolDayWidgetView.swift in Sources */,
 				B4D41B27A60634B8A45C1DF4 /* SchoolSignInView.swift in Sources */,
 				60EF6CA4646FD8C0A31AD792 /* TimetableScrollCapture.swift in Sources */,
 				621C519A4E86E62A33C4FE77 /* TimetableView.swift in Sources */,
@@ -396,6 +424,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E79972E1D584676D496FBF9C /* SchoolDayWidget.swift in Sources */,
+				03DF96DD26E69C172125B87D /* SchoolDayWidgetView.swift in Sources */,
 				D8DFDF919E3F939B1F503D8E /* WidgetSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -421,7 +450,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Config/SchoolkidWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = CYQ6X8DT95;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widgets/Info.plist;
@@ -543,7 +572,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/SEQTADisengage.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = CYQ6X8DT95;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
@@ -626,7 +655,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Config/SchoolkidWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = CYQ6X8DT95;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Widgets/Info.plist;
@@ -649,7 +678,7 @@
 				CODE_SIGN_ENTITLEMENTS = Config/SEQTADisengage.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = CYQ6X8DT95;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
@@ -720,13 +749,17 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1AC403E1782F7FCFA656C7C8 /* SEQTAKit */ = {
+		33A8F0CAD30E3835A321C2C3 /* LMSKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = SEQTAKit;
+			productName = LMSKit;
 		};
-		F76451FC7B1501854AC8D81A /* SEQTAKit */ = {
+		A051055588EBB505B67537D9 /* CanteenKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = SEQTAKit;
+			productName = CanteenKit;
+		};
+		A88E6EB81267BCBD1F288802 /* LMSKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LMSKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

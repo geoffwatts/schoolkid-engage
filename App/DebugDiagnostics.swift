@@ -1,8 +1,10 @@
 #if DEBUG
 import Foundation
-import SEQTAKit
+import SwiftUI
+import WidgetKit
+import LMSKit
 
-actor ShapeRecordingTransport: SEQTATransport {
+actor ShapeRecordingTransport: HTTPTransport {
     private let base = URLSessionTransport()
     private var records: [[String: String]] = []
     /// Class IDs seen on lessons and on assessments; only the size of their overlap is reported.
@@ -90,5 +92,29 @@ func writeDiagnosticShapes(timetableOnly: Bool = false) async {
         let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         try data.write(to: directory.appendingPathComponent("response-shapes.json"), options: .atomic)
     } catch { }
+}
+/// Renders the real widget views at Home Screen sizes for simulator layout checks, using fictional data only.
+struct WidgetLayoutPreview: View {
+    @State private var connected = true
+    private var snapshot: WidgetSnapshot {
+        var snapshot = WidgetSnapshot.sample
+        snapshot.lunchBalance = connected ? Decimal(string: "18.50") : nil
+        return snapshot
+    }
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                Toggle("MSA connected", isOn: $connected).accessibilityIdentifier("widget-msa-connected")
+                SchoolDayView(entry: SchoolDayEntry(date: .now, snapshot: snapshot), familyOverride: .systemSmall)
+                    .padding(16).frame(width: 170, height: 170)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 22))
+                    .accessibilityIdentifier("small-widget-preview")
+                SchoolDayView(entry: SchoolDayEntry(date: .now, snapshot: snapshot), familyOverride: .systemMedium)
+                    .padding(16).frame(width: 350, height: 170)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 22))
+                    .accessibilityIdentifier("medium-widget-preview")
+            }.padding()
+        }.navigationTitle("Widget layout")
+    }
 }
 #endif

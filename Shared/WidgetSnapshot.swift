@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-import SEQTAKit
+import LMSKit
 
 /// What the widgets show: the selected child's lessons and cycle days for roughly the next two weeks, written by the app
 /// whenever it loads them and read by the widget extension. It lives in the shared App Group container on this device
@@ -23,6 +23,10 @@ struct WidgetSnapshot: Codable, Equatable {
     /// The reader's reminder notes by day ("yyyy-MM-dd" → "PE uniform" in yellow), worked out by the app from its
     /// reminder rules. Absent in snapshots written before reminders existed.
     var dayReminders: [String: [ReminderNote]]?
+    /// Last loaded balance for this child, absent when MSA isn't connected (and in older snapshots).
+    var lunchBalance: Decimal?
+    /// Account and child this snapshot belongs to; keeps late balance refreshes from crossing selections.
+    var selectionKey: String?
 
     static let appGroup = "group.au.schoolkid.engage"
     private static var fileURL: URL? {

@@ -1,5 +1,6 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
+import CanteenKit
 
 struct AccountsView: View {
     @EnvironmentObject private var model: AppModel
@@ -8,6 +9,7 @@ struct AccountsView: View {
     @Environment(\.openURL) private var openURL
     @State private var showSignIn = false
     @State private var removing: SavedAccount?
+    @State private var showLunchSignIn = false
     @AppStorage(AssessmentMark.hideKey) private var hideMarks = false
     /// "reminders" when Reminders is showing, so a tapped header reminder can open the sheet straight onto it.
     @State private var path: [String] = []
@@ -54,6 +56,23 @@ struct AccountsView: View {
                         Text("Show a note such as “PE uniform” at the top of every screen and on the widget on days with certain lessons.")
                     }
                 }
+                if model.isDemo || model.account != nil {
+                    Section {
+                        if model.isDemo {
+                            Label("Demo lunch account", systemImage: "fork.knife")
+                        } else if let portal = model.canteenLink?.portal {
+                            LabeledContent { Text(portal.host).lineLimit(1) } label: { Label("My Student Account", systemImage: "fork.knife") }
+                            if model.lunchSignInNeeded {
+                                Button { showLunchSignIn = true } label: { Label("Sign in again", systemImage: "lock.open") }
+                            }
+                        } else {
+                            Button { showLunchSignIn = true } label: { Label("Connect My Student Account", systemImage: "fork.knife") }
+                                .accessibilityIdentifier("connect-lunch")
+                        }
+                    } header: { Text("Lunch orders") } footer: {
+                        Text("Order lunch and see the balance for this school account’s children. It signs in through your school’s sign-in; topping up opens the canteen’s own page.")
+                    }
+                }
                 Section {
                     Toggle(isOn: $hideMarks) { Label("Hide marks in lists", systemImage: "eye.slash") }
                 } header: { Text("Assessments") } footer: {
@@ -89,7 +108,7 @@ struct AccountsView: View {
                     if !model.isDemo { Text("Try the app with sample data. Your accounts aren’t affected.") }
                 }
                 Section {} footer: {
-                    Text("Independent and read-only. No messaging, submissions or edits.")
+                    Text("Independent. Reads your school portal; the only thing it sends is a lunch order you place.")
                         .frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 8)
                 }
             }.listStyle(.insetGrouped).navigationTitle("Accounts")
@@ -97,6 +116,7 @@ struct AccountsView: View {
                 .onAppear { if model.reminderToOpen != nil { path = ["reminders"] } }
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
                 .sheet(isPresented: $showSignIn, onDismiss: { if model.accountID != nil { dismiss() } }) { SignInView() }
+                .sheet(isPresented: $showLunchSignIn) { CanteenSignInView(portal: model.canteenLink?.portal) }
                 .confirmationDialog("Remove this saved account?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
                     Button("Remove account", role: .destructive) { if let account = removing { Task { await model.remove(account) } }; removing = nil }
                 } message: { Text("You can sign in again later. This does not revoke sessions on other devices.") }
@@ -108,8 +128,11 @@ struct SignInView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var school: String
+    /// The expired account's own website data store when signing in again, so its lunch-order sign-in carries on.
+    /// Adding an account always starts a fresh store: reusing another account's would sign in as that person.
+    private let reuseStoreID: UUID?
     /// Opens with `school` filled in when signing in again after a session expires; otherwise empty, with the placeholder.
-    init(school: String? = nil) { _school = State(initialValue: school ?? "") }
+    init(school: String? = nil, reuseStoreID: UUID? = nil) { _school = State(initialValue: school ?? ""); self.reuseStoreID = reuseStoreID }
     @State private var username = ""
     @State private var password = ""
     @State private var setupLink = ""
@@ -167,7 +190,7 @@ struct SignInView: View {
             }.listStyle(.plain).disabled(busy).navigationTitle("Connect school").navigationBarTitleDisplayMode(.inline)
                 .sheet(isPresented: $showSchoolSignIn) {
                     if let target = try? School(school) {
-                        SchoolSignInView(school: target) { dismiss() }
+                        SchoolSignInView(school: target, storeID: reuseStoreID ?? UUID()) { dismiss() }
                     }
                 }
                 .interactiveDismissDisabled(busy)
