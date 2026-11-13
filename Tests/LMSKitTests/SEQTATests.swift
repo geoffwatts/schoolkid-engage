@@ -22,7 +22,7 @@ private actor MockTransport: HTTPTransport {
     func captured() -> [URLRequest] { requests }
 }
 
-final class SEQTAKitTests: XCTestCase {
+final class SEQTATests: XCTestCase {
     private let person = #"{"status":"200","payload":{"id":7,"userDesc":"Test Parent","userName":"parent","status":"200"}}"#
     private func account(_ secret: String = "account-a") throws -> SavedAccount {
         SavedAccount(school: try School("https://school.example"), person: try Person(json: .object(["id": .number(7), "userDesc": .string("Parent")])), sessionID: secret)
