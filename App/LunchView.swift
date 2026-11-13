@@ -106,7 +106,9 @@ struct LunchView: View {
                         }
                     }
                 }
-                if let account = model.lunchAccount {
+                // Nothing to act on until the whole screen has loaded (the menu, orders and activity), so a half-loaded
+                // screen never offers New order or says "No lunch ordered yet". A refresh keeps what's showing.
+                if let account = model.lunchAccount, loadedKey == key {
                     let today = CanteenDay(Date(), timeZone: menu?.timeZone ?? .current)
                     let upcoming = orders.filter { $0.day >= today }.sorted { $0.day < $1.day }
                     let past = orders.filter { $0.day < today }.sorted { $0.day > $1.day }
@@ -154,8 +156,11 @@ struct LunchView: View {
                         }
                     }
                 } else if let child = model.child {
-                    if !model.lunchAccountsLoaded || loading {
-                        ProgressView("Loading…").frame(maxWidth: .infinity)
+                    if error != nil {
+                        // The error row below says what went wrong and offers to try again.
+                    } else if !model.lunchAccountsLoaded || loading || model.lunchAccount != nil {
+                        ProgressView("Loading…").frame(maxWidth: .infinity).padding(.vertical, 40)
+                            .listRowSeparator(.hidden).accessibilityIdentifier("lunch-first-load")
                     } else {
                         ContentUnavailableView("No lunch account for \(child.name)", systemImage: "fork.knife",
                                                description: Text("My Student Account doesn’t list an account with this child’s name."))
@@ -164,7 +169,8 @@ struct LunchView: View {
                 if let error { ErrorRow(message: error) { await load() } }
             }
             .listStyle(.plain)
-            .overlay { if loading || loadingMenu { lunchLoadingIndicator } }
+            // Over content that's already showing (a refresh, or another menu); a first load shows the row above.
+            .overlay { if (loading || loadingMenu) && loadedKey == key { lunchLoadingIndicator } }
             .navigationTitle("Lunch")
             .modifier(SchoolToolbar(showAccounts: $showAccounts))
             .navigationDestination(for: LunchRoute.self) { route in
