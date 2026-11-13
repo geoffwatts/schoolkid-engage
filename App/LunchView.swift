@@ -73,7 +73,7 @@ struct LunchBalanceBadge: View {
 /// VoiceOver just hears "Loading lunch".
 struct LunchLoadingIndicator: View {
     static let messages = [
-        "Warming the pie warmer…", "Buttering the bread…", "Consulting the tuckshop…", "Counting Michelin stars…",
+        "Warming the pie warmer…", "Buttering the bread…", "Counting Michelin stars…",
         "Reviewing gastronomy…", "Peeling the mandarins…", "Toasting the sangas…", "Asking about sausage rolls…",
         "Slicing the banana bread…", "Reading the specials board…", "Polishing the lunchboxes…", "Tasting the gravy…"
     ]
