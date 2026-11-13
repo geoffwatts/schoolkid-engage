@@ -71,21 +71,29 @@ enum CanteenFormHints {
         return WKUserScript(source: source, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
     }
 
-    /// Focuses the first empty, visible field of the top-up forms (the amount, then the card number), scrolled to the
-    /// middle of the screen. True once done, or when there's nothing to do (the user is already in a field).
+    /// Focuses the first empty, visible field of the top-up forms (the amount, then the card number). "focused" once
+    /// it has; "done" when there's nothing to do (the user is already typing somewhere); otherwise not yet drawn.
     static let focusScript = """
     (function () {
       var active = document.activeElement;
-      if (active && active !== document.body && /^(INPUT|SELECT|TEXTAREA)$/.test(active.tagName) && active.value) return true;
+      if (active && active !== document.body && /^(INPUT|SELECT|TEXTAREA)$/.test(active.tagName) && active.value) return 'done';
       var names = ['RechargeAmount', 'CardNumber'];
       for (var i = 0; i < names.length; i++) {
         var field = document.querySelector('input[name="' + names[i] + '"]');
         if (!field || field.offsetParent === null || field.value) continue;
-        field.scrollIntoView({ block: 'center' });
         field.focus();
-        return true;
+        return 'focused';
       }
-      return !document.querySelector('form');
+      return 'waiting';
+    })();
+    """
+
+    /// Where the focused field starts, in CSS pixels from the top of the page.
+    static let focusedFieldTopScript = """
+    (function () {
+      var active = document.activeElement;
+      if (!active || active === document.body) return null;
+      return active.getBoundingClientRect().top + window.scrollY;
     })();
     """
 }

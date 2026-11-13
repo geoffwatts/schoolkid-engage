@@ -18,6 +18,8 @@ final class CanteenBrowser: NSObject, ObservableObject, WKNavigationDelegate, WK
     private var loadTimeout: Task<Void, Never>?
     private let formHints: Bool
     private var focusing: Task<Void, Never>?
+    /// How much of the web view the keyboard covers, in points.
+    private var keyboardOverlap: CGFloat = 0
 
     /// `formHints` for pages where the user fills in the portal's forms (topping up): see `CanteenFormHints`.
     init(portal: MSAPortal, storeID: UUID, formHints: Bool = false) {
@@ -29,6 +31,10 @@ final class CanteenBrowser: NSObject, ObservableObject, WKNavigationDelegate, WK
         webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         webView.navigationDelegate = self; webView.uiDelegate = self
+        if formHints {
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        }
     }
     /// Puts the saved portal session into the browser first, so a signed-in page opens without a sign-in round trip.
     func open(_ url: URL, cookies: [String: String] = [:]) async {
@@ -64,10 +70,44 @@ final class CanteenBrowser: NSObject, ObservableObject, WKNavigationDelegate, WK
         focusing = Task { @MainActor [weak self] in
             for _ in 0..<20 {
                 guard let self, !Task.isCancelled else { return }
-                if let done = try? await self.webView.evaluateJavaScript(CanteenFormHints.focusScript) as? Bool, done { return }
+                let result = try? await self.webView.evaluateJavaScript(CanteenFormHints.focusScript)
+                if (result as? String) == "focused" {
+                    // Once the keyboard is up (and again once the page has settled), bring the field into the part of
+                    // the page the keyboard leaves visible; WebKit doesn't for a field focused this way.
+                    for delay in [400, 600] {
+                        try? await Task.sleep(for: .milliseconds(delay))
+                        guard !Task.isCancelled else { return }
+                        await self.revealFocusedField()
+                    }
+                    return
+                }
+                if (result as? String) == "done" { return }
                 try? await Task.sleep(for: .milliseconds(150))
             }
         }
+    }
+
+    /// Scrolls so the focused field sits a third of the way down the visible area above the keyboard.
+    private func revealFocusedField() async {
+        guard let top = try? await webView.evaluateJavaScript(CanteenFormHints.focusedFieldTopScript) as? Double else { return }
+        let scrollView = webView.scrollView
+        let insetTop = scrollView.adjustedContentInset.top
+        let visible = webView.bounds.height - insetTop - max(keyboardOverlap, scrollView.adjustedContentInset.bottom)
+        guard visible > 0 else { return }
+        let target = CGFloat(top) * scrollView.zoomScale - insetTop - visible / 3
+        let lowest = max(-insetTop, scrollView.contentSize.height - webView.bounds.height + max(keyboardOverlap, scrollView.adjustedContentInset.bottom))
+        let y = min(max(target, -insetTop), lowest)
+        guard abs(y - scrollView.contentOffset.y) > 4 else { return }
+        scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: y), animated: true)
+    }
+
+    @objc private func keyboardChanged(_ note: Notification) {
+        guard note.name != UIResponder.keyboardWillHideNotification,
+              let end = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect, let window = webView.window else {
+            keyboardOverlap = 0; return
+        }
+        let frame = webView.convert(window.convert(end, from: window.screen.coordinateSpace), from: window)
+        keyboardOverlap = max(0, webView.bounds.maxY - frame.minY)
     }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         guard (error as NSError).code != NSURLErrorCancelled else { return }
