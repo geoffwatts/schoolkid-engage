@@ -1,8 +1,9 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 import PDFKit
 
 struct NewsView: View {
+    var close: (() -> Void)? = nil
     @EnvironmentObject private var model: AppModel
     @State private var date = Date()
     @State private var notices: [Notice] = []
@@ -23,31 +24,42 @@ struct NewsView: View {
                 ContentUnavailableView("A quiet day", systemImage: "newspaper", description: Text("No notices were published for this date. Try another day."))
             }
             ForEach(notices) { notice in
+                let readScope = model.newsScope
+                // Notices carry no date of their own: this is the day they're listed under.
+                let byline = [notice.author, loadedDate.map(longDate)].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
                 NavigationLink {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 18) {
                             Text(notice.label.uppercased()).font(.caption.weight(.bold)).foregroundStyle(.teal)
                             Text(notice.title).font(.largeTitle.weight(.bold))
-                            Text(notice.author).font(.subheadline).foregroundStyle(.secondary)
+                            Text(byline).font(.subheadline).foregroundStyle(.secondary)
                             ReadingRule()
                             ReadableHTML(html: notice.html)
                         }.padding(24).frame(maxWidth: 720, alignment: .leading).frame(maxWidth: .infinity)
                     }.navigationTitle("News").navigationBarTitleDisplayMode(.inline)
+                        .onAppear { model.markNewsRead(notice.id, scope: readScope) }
+                        .toolbar { if let close { ToolbarItem(placement: .confirmationAction) { Button("Done", action: close) } } }
                 } label: {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(notice.label.uppercased()).font(.caption2.weight(.bold)).foregroundStyle(.teal)
-                        Text(notice.title).font(.headline).foregroundStyle(.primary)
-                        Text(notice.author).font(.caption).foregroundStyle(.secondary)
+                        HStack {
+                            Text(notice.title).font(.headline).foregroundStyle(.primary)
+                            if model.isNewsUnread(notice.id) {
+                                Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.teal).accessibilityLabel("Unread")
+                            }
+                        }
+                        Text(byline).font(.caption).foregroundStyle(.secondary)
                     }.padding(.vertical, 10)
                 }
             }
         }.listStyle(.plain).overlay { if loading { ProgressView("Reading school news…").padding(20).background(.regularMaterial) } }.navigationTitle("News")
+            .toolbar { if let close { ToolbarItem(placement: .confirmationAction) { Button("Done", action: close) } } }
             // Returning from a notice re-runs this task; only reload when the date has changed, keeping the position.
             .task(id: date) { if loadedDate != date { await load() } }
             .refreshable { await model.client?.clearCache(); await load(refreshing: true) }
     }
     private func load(refreshing: Bool = false) async {
-        let shown = date
+        let shown = date, scope = model.newsScope
         loading = true; error = nil; if !refreshing { notices = [] }
         defer { loading = false }
         do {
@@ -55,7 +67,9 @@ struct NewsView: View {
             if model.isDemo { values = try Demo.notices() }
             else if let client = model.client { values = try await client.news(on: date) }
             else { return }
-            try Task.checkCancellation(); notices = values; loadedDate = shown
+            try Task.checkCancellation()
+            guard scope == model.newsScope, shown == date else { return }
+            notices = values; loadedDate = shown; model.recordNews(values, on: shown)
         } catch is CancellationError { }
         catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
@@ -67,7 +81,9 @@ struct AssessmentsView: View {
     @State private var past: [Assessment] = []
     @State private var courses: [Course] = []
     @State private var courseID: String?
-    @State private var showingPast = true
+    /// Results, Upcoming or Reports. Reports live here (their own tab made room for Lunch).
+    @State private var pane = AssessmentPane.results
+    private var showingPast: Bool { pane == .results }
     /// What's on screen, so returning from an assessment (which re-runs the tasks below) doesn't reload and lose the
     /// scroll position. Reloads happen only when the child, Results/Upcoming or subject actually changes.
     @State private var loadedCoursesFor: String?
@@ -111,11 +127,14 @@ struct AssessmentsView: View {
         upcomingSubject = nil; search = ""
     }
     var body: some View {
+        if pane == .reports { ReportsView(pane: $pane) } else { assessmentList }
+    }
+    private var assessmentList: some View {
         List {
             if let child = model.child {
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
-                        Picker("Assessments", selection: $showingPast) { Text("Results").tag(true); Text("Upcoming").tag(false) }.pickerStyle(.segmented)
+                        AssessmentPanePicker(pane: $pane)
                         HStack(spacing: 4) {
                             if showingPast {
                                 Picker("Subject", selection: $courseID) {
@@ -163,7 +182,10 @@ struct AssessmentsView: View {
                             Text(assessment.displayTitle).font(.headline).lineLimit(2)
                             HStack(spacing: 10) {
                                 if !assessment.due.isEmpty { Text(reportDate(assessment.due)) }
-                                if !assessment.status.isEmpty { Text(assessment.statusLabel) }
+                                // A released mark or feedback already shows on the right (the mark, or the feedback bubble).
+                                if !assessment.status.isEmpty, !["MARKS_RELEASED", "FEEDBACK_RELEASED"].contains(assessment.status) {
+                                    Text(assessment.statusLabel)
+                                }
                             }.font(.caption).foregroundStyle(.secondary)
                         }.padding(.vertical, 1)
                             .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
@@ -419,14 +441,32 @@ struct AssessmentDetailView: View {
     }
 }
 
+enum AssessmentPane: Hashable { case results, upcoming, reports }
+
+struct AssessmentPanePicker: View {
+    @EnvironmentObject private var model: AppModel
+    @Binding var pane: AssessmentPane
+    var body: some View {
+        Picker("Assessments", selection: $pane) {
+            Text("Results").tag(AssessmentPane.results); Text("Upcoming").tag(AssessmentPane.upcoming); Text(model.unreadReportCount > 0 ? "Reports (\(model.unreadReportCount))" : "Reports")
+                .accessibilityIdentifier("reports-pane").tag(AssessmentPane.reports)
+        }.pickerStyle(.segmented)
+    }
+}
+
 struct ReportsView: View {
     @EnvironmentObject private var model: AppModel
+    /// Set when shown as the Reports segment of Assessments, which puts the segment picker at the top.
+    var pane: Binding<AssessmentPane>? = nil
     @State private var reports: [AcademicReport] = []
     @State private var loadedFor: String?
     @State private var error: String?
     @State private var loading = false
     var body: some View {
         List {
+            if let pane, model.child != nil {
+                Section { AssessmentPanePicker(pane: pane).padding(.vertical, 3) }
+            }
             if model.child != nil {
                 if loading { ProgressView("Reading reports…") }
                 if let error { ErrorRow(message: error, retry: { await load() }) }
@@ -434,11 +474,16 @@ struct ReportsView: View {
                     ContentUnavailableView("No reports yet", systemImage: "doc.text", description: Text("Reports appear here when your school releases them."))
                 }
                 ForEach(reports) { report in
-                    NavigationLink { ReportDetailView(report: report) } label: {
+                    NavigationLink { ReportDetailView(report: report, readScope: model.reportsScope) } label: {
                         HStack(spacing: 16) {
                             Image(systemName: "doc.richtext").font(.title).foregroundStyle(.teal)
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(report.title).font(.headline)
+                                HStack {
+                                    Text(report.title).font(.headline)
+                                    if model.isReportUnread(report.id) {
+                                        Image(systemName: "circle.fill").font(.system(size: 7)).foregroundStyle(.teal).accessibilityLabel("Unread")
+                                    }
+                                }
                                 Text([report.year, report.term].filter { !$0.isEmpty }.joined(separator: " · ")).font(.subheadline)
                                 Text(reportDate(report.date)).font(.caption).foregroundStyle(.secondary)
                             }
@@ -446,20 +491,23 @@ struct ReportsView: View {
                     }
                 }
             } else { ChildPlaceholder() }
-        }.listStyle(.plain).navigationTitle("Reports")
+        }.listStyle(.plain).navigationTitle(pane == nil ? "Reports" : "Assessments")
             // Returning from a report re-runs this task; only reload for a different child, keeping the position.
             .task(id: model.childID) { if loadedFor != model.childID { await load() } }
             .refreshable { await model.client?.clearCache(); await load(refreshing: true) }
     }
     private func load(refreshing: Bool = false) async {
         guard let child = model.child else { return }
+        let scope = model.reportsScope
         loading = true; error = nil; if !refreshing { reports = [] }; defer { loading = false }
         do {
             let values: [AcademicReport]
             if model.isDemo { values = try Demo.reports() }
             else if let client = model.client { values = try await client.reports(for: child) }
             else { return }
-            try Task.checkCancellation(); reports = values; loadedFor = child.id
+            try Task.checkCancellation()
+            guard scope == model.reportsScope else { return }
+            reports = values; loadedFor = child.id; model.recordReports(values)
         } catch is CancellationError { }
         catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
@@ -468,6 +516,7 @@ struct ReportsView: View {
 struct ReportDetailView: View {
     @EnvironmentObject private var model: AppModel
     let report: AcademicReport
+    let readScope: String
     @State private var data: Data?
     @State private var error: String?
     var body: some View {
@@ -487,6 +536,7 @@ struct ReportDetailView: View {
             else { return }
             try Task.checkCancellation()
             guard PDFDocument(data: value) != nil else { throw SEQTAError.invalidDocument }; data = value
+            model.markReportRead(report.id, scope: readScope)
         } catch is CancellationError { }
         catch { if !Task.isCancelled { self.error = error.localizedDescription } }
     }
@@ -550,6 +600,11 @@ struct ReadableHTML: View {
         let text = Text(plainText).font(font).lineSpacing(5)
         Group { if selectable { text.textSelection(.enabled) } else { text } }.frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+/// The app's date format, "10 November 2026" (Lunch has its own, shorter one).
+func longDate(_ date: Date) -> String {
+    date.formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "en_AU")))
 }
 
 func reportDate(_ value: String) -> String {

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
-import SEQTAKit
+import LMSKit
+import CanteenKit
 import WidgetKit
 
 @MainActor
@@ -32,21 +33,114 @@ final class AppModel: ObservableObject {
     /// Each child's teachers by class ID, from timetable lessons (assessments carry no teacher of their own).
     @Published private(set) var classTeachers: [String: [String: ClassTeacher]] = [:]
     private var teachersRequested: Set<String> = []
-    private var clients: [UUID: SEQTAClient] = [:]
-    private let store = KeychainAccountStore()
+    /// Each saved account's learning-platform client (SEQTA, the only LMS provider so far).
+    private var clients: [UUID: any LMSService] = [:]
+    let store = KeychainAccountStore()
     @Published private var schoolNames: [String: String] = UserDefaults.standard.dictionary(forKey: "publicSchoolNames") as? [String: String] ?? [:]
     var account: SavedAccount? { accounts.first { $0.id == accountID } }
     var child: Child? { children.first { $0.id == childID } }
-    var client: SEQTAClient? { accountID.flatMap { clients[$0] } }
+    var client: (any LMSService)? { accountID.flatMap { clients[$0] } }
     var schoolName: String { isDemo ? "Banksia College" : account.flatMap { schoolNames[$0.school.url.absoluteString] } ?? "School" }
     var identityHeader: String { child.map { "\($0.name) (\(schoolName))" } ?? schoolName }
+
+    // MARK: News and report read state
+
+    @Published private var unreadItems: UnreadItems = {
+        guard let data = UserDefaults.standard.data(forKey: "readingUnreadItems") else { return UnreadItems() }
+        return (try? JSONDecoder().decode(UnreadItems.self, from: data)) ?? UnreadItems()
+    }()
+    private var readingAccount: String { isDemo ? "demo" : accountID?.uuidString ?? "none" }
+    var readingScope: String { "\(readingAccount)/\(childID ?? "")" }
+    var newsScope: String { "\(readingAccount)/news" }
+    var reportsScope: String { "\(readingAccount)/reports/\(childID ?? "")" }
+    var unreadNewsCount: Int { unreadItems.count(in: newsScope) }
+    var unreadReportCount: Int { unreadItems.count(in: reportsScope) }
+    func isNewsUnread(_ id: String) -> Bool { unreadItems.isUnread(id, in: newsScope) }
+    func isReportUnread(_ id: String) -> Bool { unreadItems.isUnread(id, in: reportsScope) }
+    private func saveReadState() {
+        var saved = unreadItems
+        saved.remove(accountPrefix: "demo/")
+        guard let data = try? JSONEncoder().encode(saved) else { return }
+        UserDefaults.standard.set(data, forKey: "readingUnreadItems")
+    }
+    /// A day's notices. They're unread until opened, except those from before the account began tracking (its first
+    /// sign-in, or the first launch of a build with this): days before that count as read. Today's list is what the
+    /// badge counts; other days add to it without replacing it.
+    func recordNews(_ notices: [Notice], on date: Date) {
+        let calendar = Calendar.current
+        let baseline = unreadItems.startTracking(in: newsScope)
+        // Notices carry no time of their own, only the day they're listed under; the baseline's whole day is unread.
+        let cutoff = calendar.startOfDay(for: baseline).addingTimeInterval(-1)
+        let day = calendar.startOfDay(for: date)
+        unreadItems.recordDated(notices.map { (id: $0.id, date: day) }, in: newsScope, since: cutoff,
+                                replacing: calendar.isDateInToday(date))
+        saveReadState()
+    }
+    func recordReports(_ reports: [AcademicReport]) {
+        if isDemo {
+            unreadItems.record(reports.map(\.id), in: reportsScope, replacing: true)
+        } else {
+            let baseline = unreadItems.startTracking(in: "\(readingAccount)/reports")
+            unreadItems.recordDated(reports.map { (id: $0.id, date: $0.publishedAt) }, in: reportsScope, since: baseline)
+        }
+        saveReadState()
+    }
+    func markNewsRead(_ id: String, scope: String) {
+        unreadItems.markRead(id, in: scope); saveReadState()
+    }
+    func markReportRead(_ id: String, scope: String) {
+        unreadItems.markRead(id, in: scope); saveReadState()
+    }
+    /// Load counts before either screen is opened. Errors leave the last known count intact.
+    func refreshReadingBadges() async {
+        guard let child, isDemo || client != nil else { return }
+        let scope = readingScope, client = client, demo = isDemo
+        async let news: [Notice]? = try? (demo ? Demo.notices() : await client?.news(on: Date()) ?? [])
+        async let reports: [AcademicReport]? = try? (demo ? Demo.reports() : await client?.reports(for: child) ?? [])
+        let (notices, documents) = await (news, reports)
+        guard scope == readingScope, !Task.isCancelled else { return }
+        if let notices { recordNews(notices, on: Date()) }
+        if let documents { recordReports(documents) }
+    }
+
+    // MARK: Lunch orders (state; the logic is in AppModel+Lunch.swift)
+
+    /// Each saved account's canteen link, kept in its own Keychain item (`canteenStore`), not in the account.
+    @Published var canteenLinks: [UUID: CanteenConnection] = [:]
+    let canteenStore = CanteenLinkStore()
+    /// Each saved account's lunch-order accounts and balances, as the portal last listed them; in memory only.
+    @Published var canteenAccounts: [UUID: [CanteenAccount]] = [:]
+    /// Saved accounts whose lunch-order sign-in has ended and couldn't be renewed without the user.
+    @Published var canteenSignInNeeded: Set<UUID> = []
+    /// Bumped by the header's balance to open the Lunch tab.
+    @Published var lunchOpenRequest = UUID()
+    var canteenClients: [UUID: MSAClient] = [:]
+    var canteenCookieVersions: [UUID: Int] = [:]
+    var canteenRenewals: [UUID: Task<Bool, Never>] = [:]
+    /// Website data stores a sign-in browser is using right now, which a clean-up mustn't remove.
+    var webStoresInUse: Set<UUID> = []
+    let demoCanteen = DemoCanteen()
 
     init() {
         do {
             accounts = try store.load()
             clients = Dictionary(uniqueKeysWithValues: accounts.map { ($0.id, SEQTAClient(account: $0, transport: ActivityTransport(expiry: SessionExpiryRelay(model: self, accountID: $0.id)))) })
+            canteenLinks = loadCanteenLinks()
+            for account in accounts { if let link = canteenLink(for: account.id) { canteenClients[account.id] = makeCanteenClient(link) } }
             accountID = accounts.first?.id
+            for account in accounts {
+                _ = unreadItems.startTracking(in: "\(account.id.uuidString)/reports")
+                _ = unreadItems.startTracking(in: "\(account.id.uuidString)/news")
+            }
+            saveReadState()
         } catch { self.error = error.localizedDescription }
+    }
+
+    /// Saves a changed account (its website data store) without changing what's selected.
+    func update(_ account: SavedAccount) throws {
+        let updated = accounts.map { $0.id == account.id ? account : $0 }
+        try store.save(updated)
+        accounts = updated
     }
 
     func addAccount(school: String, username: String, password: String, setupLink: String) async throws {
@@ -63,22 +157,37 @@ final class AppModel: ObservableObject {
         try saveAccount(saved, client: client)
     }
 
-    func connect(school: School, sessionID: String) async throws {
+    /// `webStoreID` is the website data store the school sign-in used; it stays with the account.
+    func connect(school: School, sessionID: String, webStoreID: UUID? = nil) async throws {
         let relay = SessionExpiryRelay(model: self)
         let client = SEQTAClient(school: school, transport: ActivityTransport(expiry: relay))
-        let saved = try await client.connect(sessionID: sessionID)
+        var saved = try await client.connect(sessionID: sessionID)
+        saved.webStoreID = webStoreID
         relay.accountID = saved.id
         try saveAccount(saved, client: client)
     }
 
     private func saveAccount(_ saved: SavedAccount, client: SEQTAClient) throws {
+        var saved = saved
         let duplicates = accounts.filter { $0.school == saved.school && $0.personID == saved.personID }
+        // Signing in again keeps the account's lunch-order link, and its data store if this sign-in didn't use one.
+        let carriedLink = canteenLinks[saved.id] ?? duplicates.lazy.compactMap { self.canteenLinks[$0.id] }.first
+        if saved.webStoreID == nil { saved.webStoreID = duplicates.first { $0.webStoreID != nil }?.webStoreID }
         let updated = accounts.filter { existing in !duplicates.contains { $0.id == existing.id } } + [saved]
         try store.save(updated)
         accounts = updated
-        for old in duplicates { clients.removeValue(forKey: old.id) }
+        var links = canteenLinks
+        for old in duplicates { links.removeValue(forKey: old.id) }
+        links[saved.id] = carriedLink
+        if links != canteenLinks { try? canteenStore.save(links); canteenLinks = links }
+        for old in duplicates {
+            clients.removeValue(forKey: old.id); canteenClients.removeValue(forKey: old.id)
+            canteenAccounts.removeValue(forKey: old.id); canteenSignInNeeded.remove(old.id)
+        }
         clients[saved.id] = client
+        if let link = canteenLink(for: saved.id) { canteenClients[saved.id] = makeCanteenClient(link) }
         selectAccount(saved.id)
+        removeUnusedWebStores()
     }
 
     /// The selected account's school session has ended; every tab shows a "Sign in again" banner until it's renewed.
@@ -90,6 +199,7 @@ final class AppModel: ObservableObject {
     var expiredSchoolURL: String? { account?.school.url.absoluteString }
     func sessionExpired(for id: UUID) { if id == accountID, !sessionHasExpired { sessionHasExpired = true } }
     func selectAccount(_ id: UUID) {
+        clearWidgets(); schoolDays = nil
         isDemo = false; accountID = id; children = []; childID = nil; error = nil; sessionHasExpired = false
         selectionVersion = UUID()
     }
@@ -181,9 +291,20 @@ final class AppModel: ObservableObject {
         let cycles = schedules.reduce(into: [String: [String]]()) { result, schedule in result.merge(schedule.cycles) { current, _ in current } }
         var snapshot = WidgetSnapshot(childName: child.name, generatedAt: Date(), weekLetters: showsWeekLetters, cycles: cycles, lessons: lessons)
         snapshot.dayReminders = reminderNotes(for: snapshot.lessons)
+        snapshot.lunchBalance = lunchAccount?.balance
+        snapshot.selectionKey = readingScope
         schoolDays = snapshot
         snapshot.save()
         scheduleReminderAlerts()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Keep the widget's last loaded balance in sync after refreshes, orders, linking and unlinking.
+    func updateWidgetLunchBalance() {
+        guard var snapshot = schoolDays, snapshot.selectionKey == readingScope else { return }
+        snapshot.lunchBalance = lunchAccount?.balance
+        schoolDays = snapshot
+        snapshot.save()
         WidgetCenter.shared.reloadAllTimelines()
     }
 
@@ -252,13 +373,15 @@ final class AppModel: ObservableObject {
     }
     /// The widgets must never keep showing a child from an account or demo that's gone.
     private func clearWidgets() { WidgetSnapshot.clear(); WidgetCenter.shared.reloadAllTimelines() }
-    func selectChild(_ id: String) { childID = id; selectionVersion = UUID() }
+    func selectChild(_ id: String) { clearWidgets(); schoolDays = nil; childID = id; selectionVersion = UUID() }
     func startDemo() {
+        clearWidgets(); schoolDays = nil
         isDemo = true; accountID = nil
         children = [Child(id: "101", name: "Alex Morgan"), Child(id: "102", name: "Sam Morgan")]
         childID = children.first?.id; error = nil; selectionVersion = UUID()
     }
     func endDemo() {
+        schoolDays = nil
         isDemo = false; children = []; childID = nil; accountID = accounts.first?.id
         error = nil; selectionVersion = UUID(); clearWidgets()
     }
@@ -267,9 +390,14 @@ final class AppModel: ObservableObject {
             let updated = accounts.filter { $0.id != account.id }; try store.save(updated)
             await clients[account.id]?.forgetSession(); clients.removeValue(forKey: account.id); accounts = updated
             childrenByAccount.removeValue(forKey: account.id); otherChildrenRequested.remove(account.id)
+            canteenClients.removeValue(forKey: account.id); canteenAccounts.removeValue(forKey: account.id)
+            canteenSignInNeeded.remove(account.id); try? saveCanteenLink(nil, for: account.id)
+            // The account's data store (its identity-provider and lunch-order sign-ins) goes with it.
+            removeUnusedWebStores()
             clearWidgets()
             // That account's children's morning alerts go with it.
             await ReminderAlerts.removeAll(childKeyPrefix: account.id.uuidString + "-")
+            unreadItems.remove(accountPrefix: account.id.uuidString + "/"); saveReadState()
             UpdateNotifier.shared.forget(except: Set(updated.map(\.id)))
             if accountID == account.id {
                 accountID = updated.first?.id; children = []; childID = nil; selectionVersion = UUID()

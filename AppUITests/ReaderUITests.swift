@@ -31,10 +31,65 @@ final class ReaderUITests: XCTestCase {
         app.buttons["Day"].tap()
         XCTAssertTrue(app.staticTexts["English"].waitForExistence(timeout: 5))
         capture("Flat timetable")
-        tab("Reports", in: app).tap()
+        openReports(app)
         app.staticTexts["Student progress report"].tap()
         XCTAssertFalse(app.tabBars.firstMatch.exists)
         capture("Full bleed report")
+    }
+
+    func testLunchOrderFromBalance() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        let headerBalance = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Lunch balance $18.50'")).firstMatch
+        XCTAssertTrue(headerBalance.waitForExistence(timeout: 5), "Header should show the lunch balance")
+        tab("Lunch", in: app).tap()
+        XCTAssertTrue(app.staticTexts["lunch-balance-amount"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["lunch-balance-amount"].label, "$18.50")
+        XCTAssertTrue(app.staticTexts["No lunch ordered yet."].exists)
+        capture("Lunch home")
+        app.buttons["lunch-top-up"].tap()
+        XCTAssertTrue(app.staticTexts["Top up on the canteen’s page"].waitForExistence(timeout: 5), "Top up opens the canteen's page")
+        app.buttons["Done"].tap()
+        app.buttons["lunch-new-order"].tap()
+        let firstDay = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'lunch-day-'")).firstMatch
+        XCTAssertTrue(firstDay.waitForExistence(timeout: 5))
+        capture("Lunch choose day")
+        firstDay.tap()
+        XCTAssertTrue(app.buttons["Add Veggie pie"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["lunch-review"].isEnabled, "Nothing to review until something is chosen")
+        app.buttons["Add Veggie pie"].tap()
+        // Keep the item above the fixed Review bar before tapping it.
+        let juice = app.buttons["Add Apple juice"]
+        for _ in 0..<4 where !juice.isHittable || juice.frame.maxY >= app.buttons["lunch-review"].frame.minY - 20 { app.swipeUp() }
+        juice.tap()
+        capture("Lunch day menu")
+        app.buttons["lunch-review"].tap()
+        let pay = app.buttons["lunch-pay"]
+        XCTAssertTrue(pay.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["$9.00"].exists, "Pie and juice total")
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: pay)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 5), .completed, "Pay once the canteen has checked the order")
+        XCTAssertTrue(pay.label.contains("$18.50 available"), "The pay button shows the balance")
+        capture("Lunch review")
+        app.buttons["lunch-pay-card"].tap()
+        XCTAssertTrue(app.staticTexts["Top up on the canteen’s page"].waitForExistence(timeout: 5), "Pay by card opens the canteen's top-up page, even when the balance covers the order")
+        app.buttons["Done"].tap()
+        XCTAssertTrue(pay.waitForExistence(timeout: 5))
+        pay.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["lunch-ordered"].waitForExistence(timeout: 5))
+        capture("Lunch ordered")
+        app.buttons["Done"].tap()
+        XCTAssertTrue(app.staticTexts["lunch-balance-amount"].waitForExistence(timeout: 5))
+        let updated = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == '$9.50'"), object: app.staticTexts["lunch-balance-amount"])
+        XCTAssertEqual(XCTWaiter.wait(for: [updated], timeout: 5), .completed, "Balance drops by the order total")
+        XCTAssertFalse(app.staticTexts["No lunch ordered yet."].exists, "The new order shows under Upcoming")
+        capture("Lunch home after ordering")
+        // The same order again is offered on the next day.
+        app.buttons["lunch-new-order"].tap()
+        let days = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'lunch-day-'"))
+        XCTAssertTrue(days.element(boundBy: 1).waitForExistence(timeout: 5))
+        days.element(boundBy: 1).tap()
+        XCTAssertTrue(app.buttons["lunch-repeat"].waitForExistence(timeout: 5))
+        capture("Lunch repeat offered")
     }
 
     func testAttachmentStackJumpsToFiles() throws {
@@ -167,9 +222,9 @@ final class ReaderUITests: XCTestCase {
         try audit("Timetable week")
         app.buttons["Day"].firstMatch.tap()
         try audit("Timetable day")
-        tab("Reports", in: app).tap()
+        openReports(app)
         try audit("Reports")
-        tab("News", in: app).tap()
+        app.buttons["school-news"].tap()
         try audit("News")
         print("A11Y-AUDIT-BEGIN\n" + issues.joined(separator: "\n") + "\nA11Y-AUDIT-END (\(issues.count) issues)")
         XCTAssertTrue(blocking.isEmpty, "Accessibility problems:\n" + blocking.joined(separator: "\n"))
@@ -209,10 +264,10 @@ final class ReaderUITests: XCTestCase {
         shot("06-timetable-week")
         app.buttons["Day"].firstMatch.tap()
         shot("07-timetable-day")
-        tab("News", in: app).tap()
+        app.buttons["school-news"].tap()
         XCTAssertTrue(app.staticTexts["A week of curiosity"].waitForExistence(timeout: 10))
         app.staticTexts["A week of curiosity"].tap()
-        XCTAssertTrue(app.staticTexts["School office"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'School office'")).firstMatch.waitForExistence(timeout: 5))
         shot("08-news")
     }
 
@@ -257,13 +312,16 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Reading journal feedback"].waitForExistence(timeout: 10))
         app.staticTexts["Reading journal feedback"].tap()
         scrollTo("Criterion", app: app)
-        tab("News", in: app).tap()
+        // News is in the list's top bar, not the detail's.
+        goBack(in: app)
+        app.buttons["school-news"].tap()
         XCTAssertTrue(app.staticTexts["A week of curiosity"].waitForExistence(timeout: 15))
         capture("News")
         app.staticTexts["A week of curiosity"].tap()
-        XCTAssertTrue(app.staticTexts["School office"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'School office'")).firstMatch.waitForExistence(timeout: 5))
         capture("News detail")
         goBack(in: app)
+        app.buttons["Done"].tap()
         tab("Assessments", in: app).tap()
         XCTAssertTrue(app.staticTexts["Reading journal"].waitForExistence(timeout: 5))
         app.buttons["Upcoming"].tap()
@@ -297,7 +355,7 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Previous day"].exists)
         XCTAssertTrue(app.staticTexts["English"].waitForExistence(timeout: 5))
         capture("Timetable")
-        tab("Reports", in: app).tap()
+        openReports(app)
         XCTAssertTrue(app.staticTexts["Student progress report"].waitForExistence(timeout: 5))
         capture("Reports")
         app.staticTexts["Student progress report"].tap()
@@ -433,6 +491,103 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["90%"].waitForExistence(timeout: 5), "Marks still show on the assessment")
     }
 
+    func testCompactLunchHistory() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        tab("Lunch", in: app).tap()
+        let all = app.buttons["All past orders"]
+        XCTAssertTrue(all.waitForExistence(timeout: 10))
+        let rows = app.staticTexts.matching(NSPredicate(format: "label == 'Order #2040' OR label == 'Order #2039' OR label == 'Order #2038'"))
+        XCTAssertEqual(rows.count, 3)
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Order #2037'")).firstMatch.exists)
+        let upcoming = app.staticTexts.matching(NSPredicate(format: "label == 'UPCOMING' OR label == 'Upcoming'")).firstMatch
+        XCTAssertLessThan(upcoming.frame.minY - app.buttons["lunch-new-order"].frame.maxY, 30)
+        let activity = app.buttons["lunch-account-activity"]
+        XCTAssertTrue(activity.exists)
+        // Top up and Activity are a matching pair stacked beside the balance, above New order.
+        let topUp = app.buttons["lunch-top-up"], amount = app.staticTexts["lunch-balance-amount"]
+        XCTAssertEqual(activity.frame.width, topUp.frame.width, accuracy: 1)
+        XCTAssertEqual(activity.frame.height, topUp.frame.height, accuracy: 1)
+        XCTAssertEqual(activity.frame.minX, topUp.frame.minX, accuracy: 1)
+        XCTAssertGreaterThan(activity.frame.minY, topUp.frame.maxY)
+        XCTAssertGreaterThan(topUp.frame.minX, amount.frame.maxX)
+        XCTAssertLessThan(activity.frame.maxY, app.buttons["lunch-new-order"].frame.minY)
+        capture("Compact lunch home")
+        activity.tap()
+        XCTAssertTrue(app.navigationBars["Account activity"].waitForExistence(timeout: 5))
+        app.buttons["Done"].tap()
+        all.tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Order #2037'")).firstMatch.waitForExistence(timeout: 5))
+    }
+
+    func testWidgetLunchBalanceLayouts() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo", "--test-widget-layout"]; app.launch()
+        let balances = app.staticTexts.matching(NSPredicate(format: "label == 'Lunch balance $18.50'"))
+        XCTAssertTrue(balances.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(balances.count, 2, "Small and wider widgets show the balance")
+        capture("Widget lunch balances")
+        app.switches["widget-msa-connected"].tap()
+        XCTAssertEqual(balances.count, 0, "No balance when MSA is disconnected")
+        capture("Widgets without MSA")
+    }
+
+    func testNewsAndReportUnreadCounts() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
+        let news = app.buttons["school-news"]
+        XCTAssertTrue(news.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.tabBars.buttons["News"].exists)
+        let fourUnread = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '4 unread'"), object: news)
+        XCTAssertEqual(XCTWaiter.wait(for: [fourUnread], timeout: 10), .completed)
+        news.tap()
+        XCTAssertTrue(app.staticTexts["A week of curiosity"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.images["Unread"].exists, "Listing notices doesn't mark them read")
+        let today = Date().formatted(.dateTime.day().month(.wide).year().locale(Locale(identifier: "en_AU")))
+        XCTAssertTrue(app.staticTexts["School office · \(today)"].exists, "Each notice shows the day it's listed under")
+        app.staticTexts["A week of curiosity"].tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'School office'")).firstMatch.waitForExistence(timeout: 5))
+        goBack(in: app)
+        app.buttons["Done"].tap()
+        XCTAssertEqual(news.value as? String, "3 unread", "Opening a notice marks it read")
+        openReports(app)
+        XCTAssertTrue(app.segmentedControls.buttons["reports-pane"].label.contains("2"))
+        app.staticTexts["Student progress report"].tap()
+        XCTAssertTrue(app.navigationBars["Student progress report"].waitForExistence(timeout: 5))
+        let pdf = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'PDF'"))
+        _ = pdf.firstMatch.waitForExistence(timeout: 2)
+        goBack(in: app)
+        let reports = app.segmentedControls.buttons["reports-pane"]
+        XCTAssertTrue(reports.waitForExistence(timeout: 5))
+        XCTAssertTrue(reports.label.contains("1"), "Only the opened report is read")
+        app.buttons["Select child: Alex Morgan"].tap(); app.buttons["Sam Morgan"].tap()
+        openReports(app)
+        XCTAssertTrue(app.segmentedControls.buttons["reports-pane"].label.contains("2"), "The other child's reports remain unread")
+        XCTAssertEqual(app.buttons["school-news"].value as? String, "3 unread", "News read state is shared by children on the same account")
+        capture("Report and news unread badges")
+    }
+
+    func testCanteenSignInLoadsFromBareHost() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--test-canteen-sign-in"]
+        app.launch()
+        let address = app.textFields["msa.yourschool.edu.au"]
+        XCTAssertTrue(address.waitForExistence(timeout: 5))
+        // A neutral host: this checks a bare host opens in the sign-in browser, without contacting any real school.
+        address.tap(); address.typeText("example.com")
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.staticTexts["example.com"].waitForExistence(timeout: 30), "The browser opens on the portal's host")
+        let progress = app.activityIndicators["canteen-login-progress"]
+        let finished = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: progress)
+        XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 35), .completed, "Browser loading changes must reach the screen")
+        // example.com answers /wp/Profile/Accounts without a portal session, so connecting stops with an explanation.
+        XCTAssertTrue(app.staticTexts["canteen-login-error"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["canteen-login-error"].label.contains("My Student Account"))
+        XCTAssertTrue(app.webViews.firstMatch.exists)
+        capture("MSA sign-in browser")
+        app.buttons["Change address"].tap()
+        XCTAssertTrue(address.waitForExistence(timeout: 5))
+        XCTAssertEqual(address.value as? String, "example.com")
+        // No credentials are entered and no lunch account is linked by this test.
+    }
+
     func testSchoolSignInEntry() {
         let app = XCUIApplication()
         app.launch()
@@ -459,6 +614,14 @@ final class ReaderUITests: XCTestCase {
             let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", "\(angle) degrees"), object: button)
             XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 5), .completed)
         }
+    }
+    /// Reports are the third segment of Assessments.
+    private func openReports(_ app: XCUIApplication) {
+        tab("Assessments", in: app).tap()
+        let segment = app.segmentedControls.buttons["reports-pane"].firstMatch
+        // The tab may still show an assessment opened earlier; back out to the list.
+        for _ in 0..<3 where !segment.waitForExistence(timeout: 2) { goBack(in: app) }
+        XCTAssertTrue(segment.waitForExistence(timeout: 5)); segment.tap()
     }
     /// Back out of a pushed screen: the back button where there is one, otherwise the edge swipe.
     private func goBack(in app: XCUIApplication) {

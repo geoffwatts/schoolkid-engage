@@ -45,33 +45,39 @@ struct SEQTADisengageApp: App {
 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var notifier = UpdateNotifier.shared
     @State private var showAccounts = false
     @State private var showSignIn = false
+    #if DEBUG
+    /// `--open-lunch` starts on the Lunch tab, for simulator layout checks.
+    @State private var selectedTab = ProcessInfo.processInfo.arguments.contains("--open-lunch") ? 5 : 0
+    #else
     @State private var selectedTab = 0
+    #endif
+    #if DEBUG
+    @State private var testCanteenSignIn = ProcessInfo.processInfo.arguments.contains("--test-canteen-sign-in")
+    #endif
     var body: some View {
         Group {
-            if model.accountID == nil && !model.isDemo {
-                WelcomeView(showSignIn: $showSignIn)
+            #if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--test-widget-layout") {
+                NavigationStack { WidgetLayoutPreview() }
             } else {
-                TabView(selection: $selectedTab) {
-                    ListDetailNavigation(placeholder: "Select an update", systemImage: "bell") { ActivityView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Updates", systemImage: "bell") }.tag(0)
-                        // Unread updates for this account; nothing shows at zero.
-                        .badge(model.accountID.flatMap { notifier.unviewed[$0] } ?? 0)
-                    ListDetailNavigation(placeholder: "Select an assessment", systemImage: "checklist") { AssessmentsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Assessments", systemImage: "checklist") }.tag(1)
-                    NavigationStack { TimetableView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Timetable", systemImage: "calendar") }.tag(2)
-                    ListDetailNavigation(placeholder: "Select a report", systemImage: "doc.text") { ReportsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("Reports", systemImage: "doc.text") }.tag(3)
-                    ListDetailNavigation(placeholder: "Select a notice", systemImage: "newspaper") { NewsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
-                        .tabItem { Label("News", systemImage: "newspaper") }.tag(4)
-                }
-                .id(model.selectionVersion)
+                reader
             }
+            #else
+            reader
+            #endif
         }
         .task(id: model.accountID) { await model.loadChildren(); await model.loadOtherAccountsChildren() }
+        .task(id: model.readingScope) { await model.refreshReadingBadges() }
+        // Once per launch, after start-up: data stores left by unfinished sign-ins or removed accounts.
+        .task { try? await Task.sleep(for: .seconds(3)); model.removeUnusedWebStores() }
+        // The header's lunch balance, for whichever account and child are showing.
+        .task(id: "\(model.accountID?.uuidString ?? "")-\(model.isDemo)-\(model.hasLunch)") { await model.refreshLunch() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await model.refreshLunch(); await model.refreshReadingBadges() } } }
+        .onChange(of: model.lunchOpenRequest) { _, _ in showAccounts = false; selectedTab = 5 }
         .onChange(of: notifier.destination, initial: true) { _, destination in
             // A tapped update notification opens the Updates tab for its account and child.
             guard let destination else { return }
@@ -86,10 +92,39 @@ struct RootView: View {
         }
         // A reminder tapped anywhere (the header bar, the timetable) opens Settings on it.
         .onChange(of: model.reminderToOpen) { _, id in if id != nil { showAccounts = true } }
+        #if DEBUG
+        .sheet(isPresented: $testCanteenSignIn) { CanteenSignInView() }
+        #endif
         .sheet(isPresented: $showAccounts) { AccountsView() }
         .sheet(isPresented: $showSignIn) { SignInView() }
-        .sheet(isPresented: $model.reauthenticating) { SignInView(school: model.expiredSchoolURL) }
+        .sheet(isPresented: $model.reauthenticating) { SignInView(school: model.expiredSchoolURL, reuseStoreID: model.account?.webStoreID) }
     }
+    @ViewBuilder private var reader: some View {
+        Group {
+            if model.accountID == nil && !model.isDemo {
+                WelcomeView(showSignIn: $showSignIn)
+            } else {
+                TabView(selection: $selectedTab) {
+                    ListDetailNavigation(placeholder: "Select an update", systemImage: "bell") { ActivityView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+                        .tabItem { Label("Updates", systemImage: "bell") }.tag(0)
+                        // Unread updates for this account; nothing shows at zero.
+                        .badge(model.accountID.flatMap { notifier.unviewed[$0] } ?? 0)
+                    ListDetailNavigation(placeholder: "Select an assessment", systemImage: "checklist") { AssessmentsView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+                        .tabItem { Label("Assessments", systemImage: "checklist") }.tag(1)
+                        .badge(model.unreadReportCount)
+                    NavigationStack { TimetableView().modifier(SchoolToolbar(showAccounts: $showAccounts)) }
+                        .tabItem { Label("Timetable", systemImage: "calendar") }.tag(2)
+                    // Reports are a part of Assessments (its third segment), leaving room for Lunch.
+                    if model.hasLunch {
+                        LunchView(showAccounts: $showAccounts)
+                            .tabItem { Label("Lunch", systemImage: "fork.knife") }.tag(5)
+                    }
+                }
+                .id(model.selectionVersion)
+            }
+        }
+    }
+
 }
 
 struct WelcomeView: View {
@@ -123,6 +158,7 @@ struct WelcomeView: View {
 
 struct SchoolToolbar: ViewModifier {
     @EnvironmentObject private var model: AppModel
+    @State private var showNews = false
     @Binding var showAccounts: Bool
     /// A school's children, ticked when selected; a school that hasn't listed them yet offers itself instead.
     @ViewBuilder private func rows(for school: AppModel.SwitcherSchool) -> some View {
@@ -146,6 +182,20 @@ struct SchoolToolbar: ViewModifier {
                 }.accessibilityLabel("Switch school account")
             }
             ToolbarItem(placement: .topBarTrailing) {
+                Button { showNews = true } label: {
+                    Image(systemName: "newspaper")
+                        .overlay(alignment: .topTrailing) {
+                            if model.unreadNewsCount > 0 {
+                                Text(model.unreadNewsCount > 99 ? "99+" : "\(model.unreadNewsCount)")
+                                    .font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
+                                    .padding(.horizontal, 4).frame(minWidth: 17, minHeight: 17)
+                                    .background(.red, in: Capsule()).offset(x: 9, y: -9)
+                            }
+                        }
+                }.accessibilityLabel("News").accessibilityValue("\(model.unreadNewsCount) unread")
+                    .accessibilityIdentifier("school-news")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 // Every child across every saved school, grouped by school; only shown when there's a choice to make.
                 if model.showsChildSwitcher {
                     let schools = model.switcherSchools
@@ -157,19 +207,25 @@ struct SchoolToolbar: ViewModifier {
                     .accessibilityLabel("Select child: \(model.child?.name ?? "None")")
                 }
             }
+        }.sheet(isPresented: $showNews) {
+            NavigationStack {
+                NewsView(close: { showNews = false }).id(model.newsScope)
+            }
         }.safeAreaInset(edge: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(model.identityHeader).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
                         .lineLimit(1).truncationMode(.tail)
                     Spacer(minLength: 0)
+                    if let balance = model.lunchAccount?.balance { LunchBalanceBadge(balance: balance) }
                     if let cycle = model.todayCycle { CycleBadge(text: cycle) }
                 }
                 // One element for VoiceOver: the full child and school name (truncated on screen) and today's cycle.
                 .frame(minHeight: 44)
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityLabel([model.identityHeader, model.todayCycle.map { "Today is \($0)" }].compactMap { $0 }.joined(separator: ". "))
+                .accessibilityLabel([model.identityHeader, model.todayCycle.map { "Today is \($0)" },
+                                     model.lunchAccount.map { "Lunch balance \($0.balance.dollars)" }].compactMap { $0 }.joined(separator: ". "))
                 if let schoolDays = model.schoolDays {
                     // Rolls over to the next school day once today's last lesson ends, as the widget does.
                     TimelineView(.everyMinute) { context in
