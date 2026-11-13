@@ -318,8 +318,8 @@ final class AppModel: ObservableObject {
         return (try? JSONDecoder().decode([String: [ReminderRule]].self, from: data)) ?? [:]
     }()
     private var reminderKey: String? { childID.map { "\(isDemo ? "demo" : accountID?.uuidString ?? "")-\($0)" } }
-    /// The example everyone starts with, switched off until the reader turns it on.
-    static let exampleReminder = ReminderRule(note: "PE uniform", isEnabled: false, kinds: [LessonKind.sport.key])
+    /// The example everyone starts with, switched on: "PE uniform" on days with a sport lesson.
+    static let exampleReminder = ReminderRule(note: "PE uniform", isEnabled: true, kinds: [LessonKind.sport.key])
     /// The selected child's reminder rules. Changing them updates the header and the widgets straight away.
     var reminderRules: [ReminderRule] {
         get { reminderKey.flatMap { allReminderRules[$0] } ?? [Self.exampleReminder] }
