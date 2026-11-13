@@ -69,36 +69,15 @@ struct LunchBalanceBadge: View {
     }
 }
 
-/// Lunch's loading indicator. My Student Account can take a while, so it keeps the wait light with a rotating line;
-/// VoiceOver just hears "Loading lunch".
+/// Lunch's loading indicator. My Student Account can take a while, so it keeps the wait light.
 struct LunchLoadingIndicator: View {
     static let messages = [
-        "Warming the pie warmer…", "Buttering the bread…", "Counting Michelin stars…",
-        "Reviewing gastronomy…", "Peeling the mandarins…", "Toasting the sangas…", "Asking about sausage rolls…",
-        "Slicing the banana bread…", "Reading the specials board…", "Polishing the lunchboxes…", "Tasting the gravy…"
+        "Warming the pie warmer…", "Buttering the bread…", "Counting Michelin stars…", "Reviewing gastronomy…",
+        "Peeling the mandarins…", "Toasting the sangas…", "Asking about sausage rolls…", "Slicing the banana bread…",
+        "Reading the specials board…", "Polishing the lunchboxes…", "Tasting the gravy…"
     ]
-    @State private var index = Int.random(in: 0..<LunchLoadingIndicator.messages.count)
-    @State private var showing = true
     var body: some View {
-        HStack(spacing: 10) {
-            ProgressView()
-            Text(Self.messages[index]).opacity(showing ? 1 : 0)
-        }
-        .font(.subheadline).padding(.horizontal, 18).padding(.vertical, 12)
-        .background(.regularMaterial, in: Capsule())
-        .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2.4))
-                // Out, change, back in: a crossfade would overlap two lines of different lengths.
-                withAnimation(.easeOut(duration: 0.2)) { showing = false }
-                try? await Task.sleep(for: .milliseconds(200))
-                index = (index + 1) % Self.messages.count
-                withAnimation(.easeIn(duration: 0.2)) { showing = true }
-            }
-        }
-        .accessibilityElement(children: .ignore).accessibilityLabel("Loading lunch")
-        .accessibilityIdentifier("lunch-loading")
+        RotatingLoadingIndicator(messages: Self.messages, accessibilityLabel: "Loading lunch").accessibilityIdentifier("lunch-loading")
     }
 }
 

@@ -22,7 +22,7 @@ struct ActivityView: View {
                 } else { row(item) }
             }
         }.listStyle(.plain).navigationTitle("Updates")
-            .overlay { if loading { ProgressView("Reading updates…").padding(20).background(.regularMaterial) } }
+            .overlay { if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading updates") } }
             .task { await load() }.refreshable { await load() }
     }
     private func row(_ item: ActivityItem) -> some View {

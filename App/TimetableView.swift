@@ -94,7 +94,7 @@ struct TimetableView: View {
                 if loadedKey == requestKey, let schedule { if let next = dayAfterSchoolFinished(in: schedule) { selectedDate = next } }
                 else { choseStartDay = false }
             }
-            .overlay { if loading { ProgressView("Reading timetable…").padding(20).background(.regularMaterial) } }
+            .overlay { if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading timetable") } }
             .task(id: requestKey) { await load() }
             .refreshable { await model.client?.clearCache(); await load() }
     }

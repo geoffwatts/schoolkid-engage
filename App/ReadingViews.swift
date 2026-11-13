@@ -52,7 +52,7 @@ struct NewsView: View {
                     }.padding(.vertical, 10)
                 }
             }
-        }.listStyle(.plain).overlay { if loading { ProgressView("Reading school news…").padding(20).background(.regularMaterial) } }.navigationTitle("News")
+        }.listStyle(.plain).overlay { if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading school news") } }.navigationTitle("News")
             .toolbar { if let close { ToolbarItem(placement: .confirmationAction) { Button("Done", action: close) } } }
             // Returning from a notice re-runs this task; only reload when the date has changed, keeping the position.
             .task(id: date) { if loadedDate != date { await load() } }
@@ -192,7 +192,7 @@ struct AssessmentsView: View {
                     }
                 }
             } else { ChildPlaceholder() }
-        }.listStyle(.plain).overlay { if loading { ProgressView("Reading assessments…").padding(20).background(.regularMaterial) } }.navigationTitle("Assessments").task(id: model.childID) { await initialLoad() }
+        }.listStyle(.plain).overlay { if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading assessments") } }.navigationTitle("Assessments").task(id: model.childID) { await initialLoad() }
             .searchable(text: $search, prompt: "Search assessments")
             .task(id: "\(showingPast)-\(courseID ?? "")") {
                 guard loadedListKey != listKey else { return }
@@ -374,7 +374,7 @@ struct AssessmentDetailView: View {
                     }.listRowSeparator(.hidden).listSectionSeparator(.hidden)
                 }
             }.listStyle(.plain).listSectionSpacing(8).listRowSeparator(.hidden).listSectionSeparator(.hidden)
-                .contentMargins(.top, 8, for: .scrollContent).overlay { if loading { ProgressView("Reading assessment…").padding(20).background(.regularMaterial) } }
+                .contentMargins(.top, 8, for: .scrollContent).overlay { if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading assessment") } }
                 .refreshable { await model.client?.clearCache(); await load() }
                 .task { await lookUpDue() }
                 .task { await model.loadTeachersIfNeeded(for: child) }
@@ -468,7 +468,7 @@ struct ReportsView: View {
                 Section { AssessmentPanePicker(pane: pane).padding(.vertical, 3) }
             }
             if model.child != nil {
-                if loading { ProgressView("Reading reports…") }
+                if loading { SchoolLoadingIndicator(accessibilityLabel: "Reading reports").frame(maxWidth: .infinity).listRowSeparator(.hidden) }
                 if let error { ErrorRow(message: error, retry: { await load() }) }
                 if reports.isEmpty && !loading && error == nil {
                     ContentUnavailableView("No reports yet", systemImage: "doc.text", description: Text("Reports appear here when your school releases them."))

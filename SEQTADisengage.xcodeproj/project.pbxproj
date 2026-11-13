@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		03DF96DD26E69C172125B87D /* SchoolDayWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A176E0DAB8B68FBB8798D7B /* SchoolDayWidgetView.swift */; };
+		184C1C0D774F9B66023273A4 /* LoadingIndicators.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A2F47377243691AC0B5549 /* LoadingIndicators.swift */; };
 		2A401044684DC9486ECF6D10 /* RemindersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1DACC9D72F7E545975AA7C /* RemindersView.swift */; };
 		2DDD7B6DEB722D75BECF2002 /* LMSKit in Frameworks */ = {isa = PBXBuildFile; productRef = A88E6EB81267BCBD1F288802 /* LMSKit */; };
 		2EE6B169EEB4CF1B58DE09A3 /* AttachmentRotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFE23020D499CBB28B25176 /* AttachmentRotation.swift */; };
@@ -123,6 +124,7 @@
 		D090E387B076BB6048F35640 /* OfficeDocumentPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficeDocumentPreview.swift; sourceTree = "<group>"; };
 		D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDiagnostics.swift; sourceTree = "<group>"; };
 		EE152738239F0BEF15341C16 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		F8A2F47377243691AC0B5549 /* LoadingIndicators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingIndicators.swift; sourceTree = "<group>"; };
 		FF72AC72CC285027484DF72B /* seqta-disengage */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "seqta-disengage"; path = .; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -197,6 +199,7 @@
 				61E9A712B8017345AE7A9C21 /* CanteenWeb.swift */,
 				D21AB6FAF47AA650064F5275 /* DebugDiagnostics.swift */,
 				BBD124747A4D0180F0449FFF /* Demo.swift */,
+				F8A2F47377243691AC0B5549 /* LoadingIndicators.swift */,
 				A8144309535DB6C146EEB372 /* LunchDemo.swift */,
 				1E7860A9DFFF18ED7226DE57 /* LunchView.swift */,
 				CEBEB771D0347E4EDB0CD805 /* NetworkActivity.swift */,
@@ -400,6 +403,7 @@
 				E99C0FFE24C49474A153EE9D /* CanteenWeb.swift in Sources */,
 				6DF85DA3A248AB6618532626 /* DebugDiagnostics.swift in Sources */,
 				64B4F22492B5D9D40BC2B9AD /* Demo.swift in Sources */,
+				184C1C0D774F9B66023273A4 /* LoadingIndicators.swift in Sources */,
 				92814506B0FDA4D9083C639C /* LunchDemo.swift in Sources */,
 				8F32A8100268BE012BAF53CA /* LunchView.swift in Sources */,
 				71CC9CAA162F74499BD728FE /* NetworkActivity.swift in Sources */,
