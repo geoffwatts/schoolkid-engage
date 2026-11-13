@@ -16,10 +16,12 @@ final class CanteenBrowser: NSObject, ObservableObject, WKNavigationDelegate, WK
     @Published var signedInVersion = 0
     private(set) var lastFinished = Date()
     private var loadTimeout: Task<Void, Never>?
+    private let formHints: Bool
+    private var focusing: Task<Void, Never>?
 
     /// `formHints` for pages where the user fills in the portal's forms (topping up): see `CanteenFormHints`.
     init(portal: MSAPortal, storeID: UUID, formHints: Bool = false) {
-        self.portal = portal
+        self.portal = portal; self.formHints = formHints
         host = portal.host
         let config = WKWebViewConfiguration()
         config.websiteDataStore = WKWebsiteDataStore(forIdentifier: storeID)
@@ -44,12 +46,28 @@ final class CanteenBrowser: NSObject, ObservableObject, WKNavigationDelegate, WK
     var isOnSignedInPage: Bool { portal.isSignedInPage(webView.url) }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        focusing?.cancel()
         beginLoading(); host = webView.url?.host ?? host
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadTimeout?.cancel()
         loading = false; host = webView.url?.host ?? host; lastFinished = Date()
         if isOnSignedInPage { signedInVersion += 1 }
+        if formHints && isOnSignedInPage { focusFirstField() }
+    }
+
+    /// Puts the cursor in the field the page is for, scrolled into view: the amount on Recharge, the card number on
+    /// Process Payment (drawn by the page's script after load, so this retries for a few seconds). Done through
+    /// `evaluateJavaScript`, since a page's own `autofocus` doesn't bring up the keyboard in a web view.
+    private func focusFirstField() {
+        focusing?.cancel()
+        focusing = Task { @MainActor [weak self] in
+            for _ in 0..<20 {
+                guard let self, !Task.isCancelled else { return }
+                if let done = try? await self.webView.evaluateJavaScript(CanteenFormHints.focusScript) as? Bool, done { return }
+                try? await Task.sleep(for: .milliseconds(150))
+            }
+        }
     }
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         guard (error as NSError).code != NSURLErrorCancelled else { return }

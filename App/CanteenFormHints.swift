@@ -70,4 +70,22 @@ enum CanteenFormHints {
         """
         return WKUserScript(source: source, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
     }
+
+    /// Focuses the first empty, visible field of the top-up forms (the amount, then the card number), scrolled to the
+    /// middle of the screen. True once done, or when there's nothing to do (the user is already in a field).
+    static let focusScript = """
+    (function () {
+      var active = document.activeElement;
+      if (active && active !== document.body && /^(INPUT|SELECT|TEXTAREA)$/.test(active.tagName) && active.value) return true;
+      var names = ['RechargeAmount', 'CardNumber'];
+      for (var i = 0; i < names.length; i++) {
+        var field = document.querySelector('input[name="' + names[i] + '"]');
+        if (!field || field.offsetParent === null || field.value) continue;
+        field.scrollIntoView({ block: 'center' });
+        field.focus();
+        return true;
+      }
+      return !document.querySelector('form');
+    })();
+    """
 }
