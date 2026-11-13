@@ -1,6 +1,6 @@
 import Foundation
 import UserNotifications
-import SEQTAKit
+import LMSKit
 
 /// The optional morning alert: on each school day with reminders, a notification at the reader's chosen time listing
 /// them ("PE uniform · Take tuba"). They're scheduled ahead on the device as dated local notifications, which iOS

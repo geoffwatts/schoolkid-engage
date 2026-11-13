@@ -1,6 +1,6 @@
 import UIKit
 import PDFKit
-import SEQTAKit
+import LMSKit
 
 /// One assessment, ready to print: its details, released files, and the context the app knows around it.
 /// A printout of several assessments (a term's worth, say) is a list of these, each starting on a fresh page.

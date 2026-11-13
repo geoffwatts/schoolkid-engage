@@ -1,5 +1,5 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 #if canImport(FoundationModels)
 import FoundationModels
 #endif

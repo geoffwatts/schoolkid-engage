@@ -40,11 +40,4 @@ public enum JSONValue: Codable, Equatable, Sendable {
         if case .number(let n) = self, n == 0 || n == 1 { return n == 1 }
         return nil
     }
-    func required(_ key: String) throws -> String {
-        guard let value = self[key].string, !value.isEmpty else { throw SEQTAError.schema("Missing \(key)") }
-        return value
-    }
-    func requiredArray() throws -> [JSONValue] {
-        guard let array else { throw SEQTAError.schema("Expected a list") }; return array
-    }
 }

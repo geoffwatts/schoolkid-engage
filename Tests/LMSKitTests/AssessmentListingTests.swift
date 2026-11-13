@@ -1,5 +1,5 @@
 import XCTest
-@testable import SEQTAKit
+@testable import LMSKit
 
 final class AssessmentListingTests: XCTestCase {
     private func item(_ id: Int, _ subject: String, due: String = "", status: String = "", grade: String? = nil,

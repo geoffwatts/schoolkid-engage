@@ -1,5 +1,5 @@
 import XCTest
-@testable import SEQTAKit
+@testable import LMSKit
 
 final class RemindersTests: XCTestCase {
     private func kind(_ subject: String) -> String {

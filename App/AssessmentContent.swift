@@ -1,5 +1,5 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 import PDFKit
 import ImageIO
 

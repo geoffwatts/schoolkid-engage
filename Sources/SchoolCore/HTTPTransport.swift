@@ -1,19 +1,22 @@
 import Foundation
 
-/// Injectable for integration tests and custom networking. Implementations must not forward credentials across origins.
-public protocol SEQTATransport: Sendable {
+/// How every provider client (LMS or canteen) reaches the network. Injectable for tests and for the app's activity
+/// indicator. Implementations must not forward credentials across origins.
+public protocol HTTPTransport: Sendable {
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse)
 }
 
 private final class RedirectPolicy: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
                     newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
-        // JSON API routes do not require redirects. In particular, never forward a login body to SSO or another host.
+        // API routes do not require redirects. In particular, never forward a login body or cookies to SSO or another
+        // host; a redirect comes back to the caller as a 3xx response.
         completionHandler(nil)
     }
 }
 
-public final class URLSessionTransport: SEQTATransport, @unchecked Sendable {
+/// An ephemeral session with no cookie jar or cache: each client sends exactly the cookies it means to.
+public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
     private let session: URLSession
     public init() {
         let config = URLSessionConfiguration.ephemeral
@@ -26,21 +29,7 @@ public final class URLSessionTransport: SEQTATransport, @unchecked Sendable {
     }
     public func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let (data, response) = try await session.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw SEQTAError.schema("Expected HTTP") }
+        guard let http = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
         return (data, http)
-    }
-}
-
-/// Sensitive session material. Persist through KeychainAccountStore rather than UserDefaults or logs.
-public struct SavedAccount: Codable, Identifiable, Sendable {
-    public let id: UUID
-    public let school: School
-    public let name: String
-    public let username: String
-    public let personID: String
-    let sessionID: String
-    public init(id: UUID = UUID(), school: School, person: Person, sessionID: String) {
-        self.id = id; self.school = school; name = person.name; username = person.username
-        personID = person.id; self.sessionID = sessionID
     }
 }

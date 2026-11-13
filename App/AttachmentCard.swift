@@ -1,6 +1,6 @@
 import SwiftUI
 import PDFKit
-import SEQTAKit
+import LMSKit
 
 /// Media lives directly in the assessment's scroll, including every page of a PDF.
 struct AttachmentCard: View {

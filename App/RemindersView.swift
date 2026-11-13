@@ -1,5 +1,5 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 
 /// The kinds of lesson a reminder can follow, worked out by the app's subject classifier, so "Sport, PE & dance"
 /// catches "Physical Education", "HPE", "Year 7 Sport" and "Dance" without naming each one.

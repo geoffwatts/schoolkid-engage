@@ -4,18 +4,18 @@ import Foundation
 /// Create a distinct client for every account, including two accounts at the same school.
 public actor SEQTAClient {
     public let school: School
-    private let transport: any SEQTATransport
+    private let transport: any HTTPTransport
     private var sessionID: String?
     private var generation = 0
     private var fileCache: [String: (expires: Date, data: Data)] = [:]
     private let cacheLifetime: TimeInterval
     private var cache: [String: (expires: Date, payload: JSONValue)] = [:]
-    private let cacheableRoutes: Set<String> = ["load/subjects", "load/timetable", "load/notices", "assessment/list/past", "assessment/list/upcoming", "assessment/get", "assessment/submissions/get"]
+    private let cacheableRoutes: Set<String> = ["load/subjects", "load/timetable", "load/notices", "load/reports", "assessment/list/past", "assessment/list/upcoming", "assessment/get", "assessment/submissions/get"]
 
-    public init(school: School, transport: any SEQTATransport = URLSessionTransport(), cacheLifetime: TimeInterval = 300) {
+    public init(school: School, transport: any HTTPTransport = URLSessionTransport(), cacheLifetime: TimeInterval = 300) {
         self.school = school; self.transport = transport; self.cacheLifetime = cacheLifetime
     }
-    public init(account: SavedAccount, transport: any SEQTATransport = URLSessionTransport(), cacheLifetime: TimeInterval = 300) {
+    public init(account: SavedAccount, transport: any HTTPTransport = URLSessionTransport(), cacheLifetime: TimeInterval = 300) {
         school = account.school; sessionID = account.sessionID; self.transport = transport; self.cacheLifetime = cacheLifetime
     }
 

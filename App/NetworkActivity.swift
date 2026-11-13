@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-import SEQTAKit
+import LMSKit
 
 @MainActor
 final class NetworkActivity: ObservableObject {
@@ -23,7 +23,7 @@ final class NetworkActivity: ObservableObject {
     }
 }
 
-struct ActivityTransport: SEQTATransport {
+struct ActivityTransport: HTTPTransport {
     private let base = URLSessionTransport()
     /// Told when SEQTA answers "signed out", so the app can offer to sign in again in one place.
     var expiry: SessionExpiryRelay? = nil

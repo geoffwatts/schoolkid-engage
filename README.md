@@ -1,13 +1,14 @@
 # Schoolkid Engage
 
-A calm, read-only iPhone and iPad app for parents at schools that use SEQTA Engage, plus **SEQTAKit**, the Swift
-package it's built on.
+A calm iPhone and iPad app for parents at schools that use SEQTA Engage, with lunch orders for schools whose
+canteen uses My Student Account, plus **LMSKit** and **CanteenKit**, the Swift packages it's built on.
 
 - Updates feed, with alerts and a badge for new assessment results and feedback
 - Results with marks, rubrics, teacher feedback and attached photos, PDFs and Word documents
 - Upcoming work, with overdue items flagged
 - Week and day timetables that know the school cycle ("Day 3, Week A"), plus Home Screen and Lock Screen widgets
-- School news and academic reports
+- School news and academic reports, with unread counts
+- Lunch: the canteen balance, ordering a day's lunch from it, and what it's been spent on (My Student Account)
 - Several children and schools, each kept separate
 
 | | | | |
@@ -16,7 +17,8 @@ package it's built on.
 
 Screenshots use the app's fictional demo.
 
-It never submits work or sends messages, and has no server of its own: it talks only to your school. See
+It never submits work or sends messages; the only thing it sends is a lunch order you place. It has no server of
+its own: it talks only to your school and its canteen site, and card payments happen on the canteen's own page. See
 [privacy](docs/PRIVACY.md). Need help? See [support](SUPPORT.md).
 
 ## Run it
@@ -43,12 +45,18 @@ xcodebuild -project SEQTADisengage.xcodeproj -scheme SEQTADisengage \
 
 UI tests use the fictional demo and never contact a real school.
 
-## SEQTAKit
+## LMSKit and CanteenKit
 
-Add this directory as a Swift package and use the `SEQTAKit` product. It has no third-party dependencies.
+Add this directory as a Swift package. It has no third-party dependencies.
+
+- **LMSKit**: children, the updates feed, news, timetable, assessments and reports, behind an `LMSService` protocol.
+  SEQTA (`SEQTAClient`) is its provider.
+- **CanteenKit**: canteen balances, menus and lunch orders, behind a `CanteenService` protocol. My Student Account
+  (`MSAClient`) is its provider.
+- **SchoolCore**: what both share (JSON, the HTTP transport, Keychain storage), re-exported by each.
 
 ```swift
-import SEQTAKit
+import LMSKit
 
 let client = SEQTAClient(school: try School("https://engage.yourschool.edu.au"))
 let account = try await client.signIn(.password(username: username, password: password))

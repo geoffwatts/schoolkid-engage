@@ -1,7 +1,7 @@
 import XCTest
-@testable import SEQTAKit
+@testable import LMSKit
 
-private actor MockTransport: SEQTATransport {
+private actor MockTransport: HTTPTransport {
     struct Reply: Sendable {
         var json: String
         var status: Int = 200

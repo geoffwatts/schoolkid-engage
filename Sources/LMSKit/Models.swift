@@ -3,7 +3,7 @@ import CryptoKit
 
 public enum SEQTAError: Error, LocalizedError, Equatable {
     case invalidSchoolURL, invalidMagicLink, authenticationRequired, unsupportedAuthentication
-    case server(String), schema(String), invalidDocument, keychain(Int32)
+    case server(String), schema(String), invalidDocument
     public var errorDescription: String? {
         switch self {
         case .invalidSchoolURL: return "Enter an HTTPS school portal URL without a path, query, or credentials."
@@ -13,7 +13,6 @@ public enum SEQTAError: Error, LocalizedError, Equatable {
         case .server(let status): return "SEQTA returned status \(status)."
         case .schema(let detail): return "This school's response is not yet supported: \(detail)."
         case .invalidDocument: return "The server did not return a PDF report."
-        case .keychain(let status): return "Could not access saved accounts (Keychain \(status))."
         }
     }
 }
@@ -160,6 +159,21 @@ public struct AcademicReport: Identifiable, Sendable {
     public let term: String
     public let title: String
     public let date: String
+    /// Publication timestamp when supplied; date-only values use local midnight.
+    public var publishedAt: Date? {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let parsed = iso.date(from: date) { return parsed }
+        iso.formatOptions = [.withInternetDateTime]
+        if let parsed = iso.date(from: date) { return parsed }
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "en_US_POSIX"); parser.isLenient = false
+        for format in ["yyyy-MM-dd", "d MMMM yyyy", "d MMM yyyy", "dd/MM/yyyy"] {
+            parser.dateFormat = format
+            if let parsed = parser.date(from: date) { return parsed }
+        }
+        return nil
+    }
     public init(json: JSONValue) throws {
         id = try json.required("uuid"); year = json["year"].string ?? ""
         term = json["terms"].string ?? ""; title = json["types"].string ?? "Academic report"

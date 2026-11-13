@@ -1,5 +1,5 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 
 struct TimetableWeekView: View {
     let schedule: TimetableSchedule

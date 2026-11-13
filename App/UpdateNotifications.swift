@@ -1,6 +1,6 @@
 import BackgroundTasks
 import Foundation
-import SEQTAKit
+import LMSKit
 import UserNotifications
 
 /// Announces new bell-feed events with local notifications. There is no push server: iOS wakes the app for

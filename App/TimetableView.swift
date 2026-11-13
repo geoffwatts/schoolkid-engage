@@ -1,5 +1,5 @@
 import SwiftUI
-import SEQTAKit
+import LMSKit
 
 struct TimetableView: View {
     @EnvironmentObject private var model: AppModel

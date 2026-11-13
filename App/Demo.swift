@@ -1,5 +1,5 @@
 import Foundation
-import SEQTAKit
+import LMSKit
 import UIKit
 
 enum Demo {
