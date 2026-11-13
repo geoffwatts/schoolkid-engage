@@ -491,6 +491,22 @@ final class ReaderUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["90%"].waitForExistence(timeout: 5), "Marks still show on the assessment")
     }
 
+    func testLunchLoadingShowsNoControls() {
+        let app = XCUIApplication(); app.launchArguments = ["--demo", "--slow-lunch"]; app.launch()
+        tab("Lunch", in: app).tap()
+        let loading = app.descendants(matching: .any)["lunch-loading"]
+        XCTAssertTrue(loading.waitForExistence(timeout: 5), "A loading indicator while My Student Account answers")
+        XCTAssertEqual(loading.label, "Loading lunch")
+        XCTAssertFalse(app.buttons["lunch-new-order"].exists, "Nothing to act on while loading")
+        XCTAssertFalse(app.buttons["lunch-top-up"].exists)
+        XCTAssertFalse(app.staticTexts["No lunch ordered yet."].exists, "No conclusions before the orders have loaded")
+        capture("Lunch loading")
+        XCTAssertTrue(app.staticTexts["lunch-balance-amount"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["lunch-new-order"].isEnabled)
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: loading)
+        XCTAssertEqual(XCTWaiter.wait(for: [gone], timeout: 5), .completed)
+    }
+
     func testCompactLunchHistory() {
         let app = XCUIApplication(); app.launchArguments = ["--demo"]; app.launch()
         tab("Lunch", in: app).tap()

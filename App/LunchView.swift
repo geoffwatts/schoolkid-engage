@@ -69,6 +69,78 @@ struct LunchBalanceBadge: View {
     }
 }
 
+/// Lunch's loading indicator. My Student Account can take a while, so it keeps the wait light with a rotating line;
+/// VoiceOver just hears "Loading lunch".
+struct LunchLoadingIndicator: View {
+    static let messages = [
+        "Warming the pie warmer…", "Buttering the bread…", "Consulting the tuckshop…", "Counting Michelin stars…",
+        "Reviewing gastronomy…", "Peeling the mandarins…", "Toasting the sangas…", "Asking about sausage rolls…",
+        "Slicing the banana bread…", "Reading the specials board…", "Polishing the lunchboxes…", "Tasting the gravy…"
+    ]
+    @State private var index = Int.random(in: 0..<LunchLoadingIndicator.messages.count)
+    @State private var showing = true
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+            Text(Self.messages[index]).opacity(showing ? 1 : 0)
+        }
+        .font(.subheadline).padding(.horizontal, 18).padding(.vertical, 12)
+        .background(.regularMaterial, in: Capsule())
+        .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2.4))
+                // Out, change, back in: a crossfade would overlap two lines of different lengths.
+                withAnimation(.easeOut(duration: 0.2)) { showing = false }
+                try? await Task.sleep(for: .milliseconds(200))
+                index = (index + 1) % Self.messages.count
+                withAnimation(.easeIn(duration: 0.2)) { showing = true }
+            }
+        }
+        .accessibilityElement(children: .ignore).accessibilityLabel("Loading lunch")
+        .accessibilityIdentifier("lunch-loading")
+    }
+}
+
+/// The Lunch screen's shape while it first loads: grey bars where the text will be and greyed controls. Nothing in
+/// it can be tapped, and VoiceOver skips it (the loading indicator speaks for it).
+private struct LunchSkeleton: View {
+    var body: some View {
+        Group {
+            Section {
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Balance").font(.subheadline)
+                        Text("$00.00").font(.largeTitle.weight(.bold))
+                    }
+                    Spacer(minLength: 0)
+                    VStack(spacing: 8) { pill("Top up"); pill("Activity") }.frame(width: 136)
+                }.padding(.top, 6).listRowSeparator(.hidden)
+                VStack(alignment: .leading, spacing: 12) {
+                    Capsule().fill(Color.secondary.opacity(0.16)).frame(height: 50)
+                    Text("Upcoming").font(.footnote.weight(.semibold))
+                }
+                .listRowSeparator(.hidden).listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 0, trailing: 16))
+                row
+            }
+            Section { ForEach(0..<3, id: \.self) { _ in row } } header: { Text("Past orders") }
+        }
+        .redacted(reason: .placeholder).foregroundStyle(.secondary)
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+    private func pill(_ title: String) -> some View {
+        Text(title).font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 8)
+            .background(Color.secondary.opacity(0.16), in: Capsule())
+    }
+    private var row: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack { Text("Wed, 12 Nov 26").font(.headline); Spacer(); Text("$9.50") }
+            Text("Chicken wrap, Apple juice").font(.subheadline)
+            Text("Order #2040").font(.caption)
+        }.padding(.vertical, 2)
+    }
+}
+
 private enum LunchRoute: Hashable { case chooseDay, order(CanteenDay), review, pastOrders }
 
 /// Lunch: the child's balance, the days open for ordering, orders already placed, and recent account activity.
@@ -158,9 +230,8 @@ struct LunchView: View {
                 } else if let child = model.child {
                     if error != nil {
                         // The error row below says what went wrong and offers to try again.
-                    } else if !model.lunchAccountsLoaded || loading || model.lunchAccount != nil {
-                        ProgressView("Loading…").frame(maxWidth: .infinity).padding(.vertical, 40)
-                            .listRowSeparator(.hidden).accessibilityIdentifier("lunch-first-load")
+                    } else if showingSkeleton {
+                        LunchSkeleton()
                     } else {
                         ContentUnavailableView("No lunch account for \(child.name)", systemImage: "fork.knife",
                                                description: Text("My Student Account doesn’t list an account with this child’s name."))
@@ -170,7 +241,7 @@ struct LunchView: View {
             }
             .listStyle(.plain)
             // Over content that's already showing (a refresh, or another menu); a first load shows the row above.
-            .overlay { if (loading || loadingMenu) && loadedKey == key { lunchLoadingIndicator } }
+            .overlay { if showingSkeleton || ((loading || loadingMenu) && loadedKey == key) { LunchLoadingIndicator() } }
             .navigationTitle("Lunch")
             .modifier(SchoolToolbar(showAccounts: $showAccounts))
             .navigationDestination(for: LunchRoute.self) { route in
@@ -182,7 +253,7 @@ struct LunchView: View {
                         }
                         orderSection.disabled(loading || loadingMenu)
                     }.listStyle(.plain).navigationTitle("New order").navigationBarTitleDisplayMode(.inline)
-                        .overlay { if loading || loadingMenu { lunchLoadingIndicator } }
+                        .overlay { if loading || loadingMenu { LunchLoadingIndicator() } }
                 case .pastOrders:
                     let today = CanteenDay(Date(), timeZone: menu?.timeZone ?? .current)
                     List(orders.filter { $0.day < today }.sorted { $0.day > $1.day }) { PastOrderRow(order: $0) }.listStyle(.plain).navigationTitle("Past orders")
@@ -260,10 +331,12 @@ struct LunchView: View {
         .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.regular).tint(LunchStyle.text)
     }
 
-    private var lunchLoadingIndicator: some View {
-        ProgressView("Loading…").padding(20).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-            .accessibilityIdentifier("lunch-loading")
+    /// The first load: the screen's shape, greyed, until there's something real to act on.
+    private var showingSkeleton: Bool {
+        guard model.child != nil, error == nil, !(model.lunchAccount != nil && loadedKey == key) else { return false }
+        return !model.lunchAccountsLoaded || loading || model.lunchAccount != nil
     }
+
     private func deadlineText(_ deadline: Date) -> String {
         let zone = menu?.timeZone ?? .current
         var time = Date.FormatStyle.dateTime.hour().minute().locale(Locale(identifier: "en_AU"))

@@ -7,11 +7,20 @@ actor DemoCanteen: CanteenService {
     private var placed: [Int: [CanteenPastOrder]] = [:]
     private var nextNumber = 2041
 
+    #if DEBUG
+    /// `--slow-lunch` makes the demo as slow as a real portal can be, for the loading state's layout and UI tests.
+    private let delay: Duration = ProcessInfo.processInfo.arguments.contains("--slow-lunch") ? .seconds(4) : .zero
+    #else
+    private let delay: Duration = .zero
+    #endif
+    private func wait() async throws { if delay > .zero { try await Task.sleep(for: delay) } }
+
     func accounts() async throws -> [CanteenAccount] {
-        [CanteenAccount(id: 1, name: "Alex Morgan", reference: "1000000000011", balance: balances[1]!, canOrder: true, canRecharge: true),
+        try await wait()
+        return [CanteenAccount(id: 1, name: "Alex Morgan", reference: "1000000000011", balance: balances[1]!, canOrder: true, canRecharge: true),
          CanteenAccount(id: 2, name: "Sam Morgan", reference: "1000000000012", balance: balances[2]!, canOrder: true, canRecharge: true)]
     }
-    func menus(account: Int) async throws -> [CanteenMenuSummary] { [CanteenMenuSummary(id: 1, name: "Term 4 Menu")] }
+    func menus(account: Int) async throws -> [CanteenMenuSummary] { try await wait(); return [CanteenMenuSummary(id: 1, name: "Term 4 Menu")] }
     func menu(account: Int, menu: Int) async throws -> CanteenMenu {
         try CanteenMenu(msaJSON: JSONDecoder().decode(JSONValue.self, from: Data(Self.menuJSON(balance: balances[account] ?? 0).utf8)))
     }

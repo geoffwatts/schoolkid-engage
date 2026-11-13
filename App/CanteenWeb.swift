@@ -281,6 +281,7 @@ private struct CanteenLoginContent: View {
 struct CanteenPageView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     let title: String
     let url: URL?
     /// What to do on the page, shown above it (e.g. the amount to top up).
@@ -297,7 +298,17 @@ struct CanteenPageView: View {
                 } else { ContentUnavailableView("Lunch orders aren’t connected", systemImage: "fork.knife") }
             }
             .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar {
+                // The same page in Safari, with Safari's own sign-in: a way round a sign-in that's gone wrong here, or
+                // for anyone who'd rather pay there. Its session is separate from the app's.
+                if let url, !model.isDemo {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { openURL(url); dismiss() } label: { Image(systemName: "safari") }
+                            .accessibilityLabel("Open in Safari").accessibilityIdentifier("canteen-open-in-safari")
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
         }
         .task {
             guard browser == nil, let url, let account = model.account, let link = model.canteenLink, let storeID = account.webStoreID else { return }
